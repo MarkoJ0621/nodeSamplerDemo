@@ -27,6 +27,7 @@ target_link_libraries(NodeSampler
     PRIVATE 
         juce::juce_audio_utils
         juce::juce_gui_extra
+        juce::juce_audio_formats
 )
 
 target_compile_definitions(NodeSampler

@@ -6,12 +6,12 @@
 //==============================================================================
 namespace nodeSamplerWebview
 {
-    class AudioPluginAudioProcessorEditor final : public juce::AudioProcessorEditor
+    class AudioPluginAudioProcessorEditor final : public juce::AudioProcessorEditor, private juce::Timer
     {
     public:
         explicit AudioPluginAudioProcessorEditor(AudioPluginAudioProcessor &);
         ~AudioPluginAudioProcessorEditor() override;
-
+        void timerCallback() override;
         //==============================================================================
         void resized() override;
 

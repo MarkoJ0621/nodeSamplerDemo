@@ -1,0 +1,5 @@
+# Hashes of file build rules.
+d161603556b18b43624d8dd55ce88c73 NodeSampler_artefacts/JuceLibraryCode/JuceHeader.h
+d98e39e82353630c52e566a16e0a5df9 NodeSampler_artefacts/JuceLibraryCode/NodeSampler_AU/PkgInfo
+4d534ad67c527185d65d803673d10ce6 NodeSampler_artefacts/JuceLibraryCode/NodeSampler_Standalone/PkgInfo
+a983aea3116c9a4f8a76c6532368e591 NodeSampler_artefacts/JuceLibraryCode/NodeSampler_VST3/PkgInfo

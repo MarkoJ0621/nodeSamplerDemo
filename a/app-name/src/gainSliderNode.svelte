@@ -25,10 +25,11 @@
             max="1"
             step="0.01"
             class="nodrag"
-            value={data.gain ?? 0}
+            value={data.displayGain ?? data.gain ?? 0}
             oninput={handleGainChange}
         />
         <Handle type="source" position={Position.Bottom} />
-        <Handle type="target" position={Position.Top} />
+        <Handle type="target" position={Position.Top} id="input" />
+        <Handle type="target" position={Position.Right} id="modulation" />
     </div>
 </div>

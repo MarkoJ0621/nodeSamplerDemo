@@ -1,6 +1,8 @@
 #pragma once
 
 #include <juce_audio_processors/juce_audio_processors.h>
+#include <juce_audio_formats/juce_audio_formats.h>
+#include <juce_audio_devices/sources/juce_AudioTransportSource.h>
 
 //==============================================================================
 namespace nodeSamplerWebview
@@ -44,11 +46,18 @@ namespace nodeSamplerWebview
         void getStateInformation(juce::MemoryBlock &destData) override;
         void setStateInformation(const void *data, int sizeInBytes) override;
         juce::AudioProcessorValueTreeState parameters;
+        void loadSample(const juce::String &filePath);
+        void startPlayback();
+        void stopPlayback();
 
     private:
         //==============================================================================
         JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(AudioPluginAudioProcessor)
         juce::Random random;
         static juce::AudioProcessorValueTreeState::ParameterLayout createParameterLayout();
+        double lfoPhase = 0.0;
+        juce::AudioFormatManager formatManager;
+        std::unique_ptr<juce::AudioFormatReaderSource> readerSource;
+        juce::AudioTransportSource transportSource;
     };
 }

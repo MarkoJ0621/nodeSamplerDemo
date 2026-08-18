@@ -49,11 +49,44 @@ namespace nodeSamplerWebview
                       .withNativeIntegrationEnabled()
                       .withEventListener("gainChange", [this](const juce::var &value)
                                          {
-                                    if (auto* param = processorRef.parameters.getParameter("gain"))
-            {
-                float normalized = param->convertTo0to1((float) value);
-                param->setValueNotifyingHost(normalized);
-            } }))
+        if (auto *param = processorRef.parameters.getParameter("gain"))
+        {
+            float normalized = param->convertTo0to1((float)value);
+            param->setValueNotifyingHost(normalized);
+        } })
+                      .withEventListener("freqChange", [this](const juce::var &value)
+                                         {
+        if (auto *param = processorRef.parameters.getParameter("freq"))
+        {
+            float normalized = param->convertTo0to1((float)value);
+            param->setValueNotifyingHost(normalized);
+        } })
+                      .withEventListener("ampChange", [this](const juce::var &value)
+                                         {
+        if (auto *param = processorRef.parameters.getParameter("amp"))
+        {
+            float normalized = param->convertTo0to1((float)value);
+            param->setValueNotifyingHost(normalized);
+        } })
+                      .withNativeFunction("chooseFile", [this](const juce::Array<juce::var> &, juce::WebBrowserComponent::NativeFunctionCompletion completion)
+                                          {
+        auto chooser = std::make_shared<juce::FileChooser>("are we", juce::File{}, "*.wav;*.aiff;*.mp3");
+
+
+        chooser->launchAsync(juce::FileBrowserComponent::openMode | juce::FileBrowserComponent::canSelectFiles, [this, completion, chooser](const juce::FileChooser &fc)
+                             {
+        auto path = fc.getResult().getFullPathName();
+        processorRef.loadSample(path);   
+        completion(juce::var(path)); }); })
+                      .withNativeFunction("start", [this](const juce::Array<juce::var> &, juce::WebBrowserComponent::NativeFunctionCompletion completion)
+                                          {
+        std::cout << "Bro..." << std::endl;
+        processorRef.startPlayback();
+        completion("hello"); })
+                      .withNativeFunction("stop", [this](const juce::Array<juce::var> &, juce::WebBrowserComponent::NativeFunctionCompletion completion)
+                                          {
+        processorRef.stopPlayback();
+        completion("bye"); }))
     {
         juce::ignoreUnused(processorRef);
         addAndMakeVisible(webView);
@@ -62,12 +95,16 @@ namespace nodeSamplerWebview
         // editor's size to whatever you need it to be.
         setSize(800, 600);
         webView.goToURL(webView.getResourceProviderRoot());
+        startTimerHz(30);
     }
 
     AudioPluginAudioProcessorEditor::~AudioPluginAudioProcessorEditor()
     {
+        stopTimer();
     }
-
+    void AudioPluginAudioProcessorEditor::timerCallback()
+    {
+    }
     void AudioPluginAudioProcessorEditor::resized()
     {
         webView.setBounds(getLocalBounds());
@@ -75,16 +112,16 @@ namespace nodeSamplerWebview
         // subcomponents in your editor..
     }
     using Resource = juce::WebBrowserComponent::Resource;
-        std::optional<Resource> AudioPluginAudioProcessorEditor::getResource(const juce::String &url)
-        {
-    #ifdef RESOURCE_FILE_ROOT_PATH
+    std::optional<Resource> AudioPluginAudioProcessorEditor::getResource(const juce::String &url)
+    {
+#ifdef RESOURCE_FILE_ROOT_PATH
         static const auto resourceFileRoot = juce::File(RESOURCE_FILE_ROOT_PATH);
-    #else
+#else
         // Fallback: assume the current working directory is the project root
         // and locate `plugin/ui/public` relative to it. This is useful when
         // running from an IDE or during development.
         static const auto resourceFileRoot = juce::File::getCurrentWorkingDirectory().getChildFile("plugin/ui/public");
-    #endif
+#endif
         const auto resourceToRetrieve = url == "/" ? "index.html" : url.fromFirstOccurrenceOf("/", false, false);
         const auto resource = resourceFileRoot.getChildFile(resourceToRetrieve).createInputStream();
         if (resource)

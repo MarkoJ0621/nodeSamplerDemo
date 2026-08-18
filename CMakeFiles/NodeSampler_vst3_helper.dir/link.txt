@@ -1,0 +1,1 @@
+/Library/Developer/CommandLineTools/usr/bin/c++  -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX14.4.sdk -Wl,-search_paths_first -Wl,-headerpad_max_install_names CMakeFiles/NodeSampler_vst3_helper.dir/juce/modules/juce_audio_plugin_client/VST3/juce_VST3ManifestHelper.mm.o -o NodeSampler_vst3_helper  -framework Foundation
