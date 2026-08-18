@@ -185,6 +185,26 @@
     console.log("Amp changed to:", value);
     window.__JUCE__?.backend.emitEvent("ampChange", value);
   }
+  // Add a node dynamically to the flow
+  function addNode(
+    type: "gainSliderNode" | "lfoNode" | "audioFileNode" = "gainSliderNode",
+  ) {
+    const id = String(Date.now());
+    const idx = nodes.length;
+    const position = {
+      x: 50 + (idx % 6) * 160,
+      y: 50 + Math.floor(idx / 6) * 120,
+    };
+    const newNode = {
+      id,
+      type,
+      data: { label: `${type.replace(/Node$/, "")} ${id}` },
+      position,
+      class: "svelte-flow__node-default",
+    } as Node;
+
+    nodes = [...nodes, newNode];
+  }
   let lfoLiveValue = $derived(
     nodes.find((n) => n.id === "4")?.data.value as number | undefined,
   );
@@ -227,6 +247,13 @@
     onconnect={handleConnect}
     ondelete={handleDelete}
   >
+    <Panel position="top-left">
+      <div style="display:flex;gap:8px;align-items:center;">
+        <button onclick={() => addNode("gainSliderNode")}>Add Gain</button>
+        <button onclick={() => addNode("lfoNode")}>Add LFO</button>
+        <button onclick={() => addNode("audioFileNode")}>Add Audio File</button>
+      </div>
+    </Panel>
     <Panel position="top-right">hello...</Panel>
     <Controls />
     <Background />
