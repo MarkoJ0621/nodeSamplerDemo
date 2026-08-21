@@ -80,7 +80,6 @@ namespace nodeSamplerWebview
         completion(juce::var(path)); }); })
                       .withNativeFunction("start", [this](const juce::Array<juce::var> &, juce::WebBrowserComponent::NativeFunctionCompletion completion)
                                           {
-        std::cout << "Bro..." << std::endl;
         processorRef.startPlayback();
         completion("hello"); })
                       .withNativeFunction("stop", [this](const juce::Array<juce::var> &, juce::WebBrowserComponent::NativeFunctionCompletion completion)
@@ -121,6 +120,7 @@ namespace nodeSamplerWebview
         // and locate `plugin/ui/public` relative to it. This is useful when
         // running from an IDE or during development.
         static const auto resourceFileRoot = juce::File::getCurrentWorkingDirectory().getChildFile("plugin/ui/public");
+        std::cout << resourceFileRoot.getFullPathName() << std::endl;
 #endif
         const auto resourceToRetrieve = url == "/" ? "index.html" : url.fromFirstOccurrenceOf("/", false, false);
         const auto resource = resourceFileRoot.getChildFile(resourceToRetrieve).createInputStream();
