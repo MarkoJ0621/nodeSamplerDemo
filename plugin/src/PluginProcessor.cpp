@@ -1,12 +1,15 @@
 #include "PluginProcessor.h"
 #include "PluginEditor.h"
 
+using AudioGraphIOProcessor = juce::AudioProcessorGraph::AudioGraphIOProcessor;
+using Node = juce::AudioProcessorGraph::Node;
 //==============================================================================
 namespace nodeSamplerWebview
 {
     AudioPluginAudioProcessor::AudioPluginAudioProcessor()
         : AudioProcessor(BusesProperties()
                              .withOutput("Output", juce::AudioChannelSet::stereo(), true)),
+          mainProcessor(new juce::AudioProcessorGraph()),
           parameters(*this, nullptr, "PARAMETERS", createParameterLayout())
     {
         formatManager.registerBasicFormats();
@@ -41,15 +44,18 @@ namespace nodeSamplerWebview
     }
     void AudioPluginAudioProcessor::loadSample(const juce::String &filePath)
     {
-        std::cout << "Loading sample from: " << filePath << std::endl;
         juce::File file(filePath);
 
         if (auto *reader = formatManager.createReaderFor(file))
         {
             auto newSource = std::make_unique<juce::AudioFormatReaderSource>(reader, true);
 
-            transportSource.setSource(newSource.get(), 0, nullptr, reader->sampleRate);
-            readerSource = std::move(newSource);
+            if (auto *sampler = dynamic_cast<SamplePlayer *>(samplerNode->getProcessor()))
+            {
+                sampler->setSource(newSource.get(), getSampleRate());
+            }
+
+            readerSource = std::move(newSource); // must outlive the transportSource's use of it
         }
     }
     //==============================================================================
@@ -123,14 +129,20 @@ namespace nodeSamplerWebview
         // Use this method as the place to do any pre-playback
         // initialisation that you need..
         juce::ignoreUnused(sampleRate, samplesPerBlock);
-        transportSource.prepareToPlay(samplesPerBlock, sampleRate);
+        mainProcessor->setPlayConfigDetails(getMainBusNumInputChannels(),
+                                            getMainBusNumOutputChannels(),
+                                            sampleRate,
+                                            samplesPerBlock);
+        mainProcessor->prepareToPlay(sampleRate, samplesPerBlock);
+        initialiseGraph();
     }
 
     void AudioPluginAudioProcessor::releaseResources()
     {
+        mainProcessor->releaseResources();
+
         // When playback stops, you can use this as an opportunity to free up any
         // spare memory, etc.
-        transportSource.releaseResources();
     }
 
     bool AudioPluginAudioProcessor::isBusesLayoutSupported(const BusesLayout &layouts) const
@@ -160,39 +172,28 @@ namespace nodeSamplerWebview
                                                  juce::MidiBuffer &midiMessages)
     {
         juce::ignoreUnused(midiMessages);
-
         juce::ScopedNoDenormals noDenormals;
-        auto totalNumInputChannels = getTotalNumInputChannels();
-        auto totalNumOutputChannels = getTotalNumOutputChannels();
 
-        // In case we have more outputs than inputs, this code clears any output
-        // channels that didn't contain input data, (because these aren't
-        // guaranteed to be empty - they may contain garbage).
-        // This is here to avoid people getting screaming feedback
-        // when they first compile a plugin, but obviously you don't need to keep
-        float lfoFrequency = parameters.getRawParameterValue("freq")->load();
-        double phaseIncrement = lfoFrequency / getSampleRate();
-        float lfoGain = parameters.getRawParameterValue("amp")->load();
-        // this is 4 the audio files to be able to play
-        juce::AudioSourceChannelInfo info(&buffer, 0, buffer.getNumSamples());
-        transportSource.getNextAudioBlock(info);
-        // for (int channel = 0; channel < totalNumOutputChannels; ++channel)
-        // {
-        //     auto *channelData = buffer.getWritePointer(channel);
+        mainProcessor->processBlock(buffer, midiMessages);
+    }
+    void AudioPluginAudioProcessor::initialiseGraph()
+    {
+        mainProcessor->clear();
+        audioInputNode = mainProcessor->addNode(std::make_unique<AudioGraphIOProcessor>(AudioGraphIOProcessor::audioInputNode));
+        audioOutputNode = mainProcessor->addNode(std::make_unique<AudioGraphIOProcessor>(AudioGraphIOProcessor::audioOutputNode));
+        auto playerNode = std::make_unique<SamplePlayer>();
+        samplePlayer = playerNode.get();
+        samplerNode = mainProcessor->addNode(std::move(playerNode));
+        connectAudioNodes();
+    }
 
-        //     for (int sample = 0; sample < buffer.getNumSamples(); ++sample)
-        //     {
-        //         float lfoValue = std::sin(2.0f * juce::MathConstants<float>::pi * (float)lfoPhase);
-
-        //         lfoPhase += phaseIncrement;
-        //         if (lfoPhase >= 1.0)
-        //             lfoPhase -= 1.0;
-        //         float gain = parameters.getRawParameterValue("gain")->load();
-        //         gain = gain * (1.0f + lfoValue * lfoGain);
-        //         channelData[sample] = (random.nextFloat() * 1.0f - 0.5f) * gain;
-        //         // std::cout << parameters.getRawParameterValue("sample")->load();
-        //     }
-        // }
+    void AudioPluginAudioProcessor::connectAudioNodes()
+    {
+        for (int channel = 0; channel < 2; ++channel)
+        {
+            mainProcessor->addConnection({{samplerNode->nodeID, channel},
+                                          {audioOutputNode->nodeID, channel}});
+        }
     }
 
     //==============================================================================
@@ -223,13 +224,27 @@ namespace nodeSamplerWebview
     }
     void AudioPluginAudioProcessor::startPlayback()
     {
-        transportSource.setPosition(0.0);
-        transportSource.start();
+        if (samplePlayer != nullptr)
+        {
+            samplePlayer->stop();
+            samplePlayer->setPosition(0.0);
+            samplePlayer->start();
+        }
     }
 
     void AudioPluginAudioProcessor::stopPlayback()
     {
-        transportSource.stop();
+        if (samplePlayer != nullptr)
+            samplePlayer->stop();
+    }
+
+    void AudioPluginAudioProcessor::newSampler(const juce::String &filePath)
+    {
+        auto playerNode = std::make_unique<SamplePlayer>();
+        samplePlayer = playerNode.get();
+        samplerNode = mainProcessor->addNode(std::move(playerNode));
+        if (!filePath.isEmpty())
+            loadSample(filePath);
     }
 }
 
