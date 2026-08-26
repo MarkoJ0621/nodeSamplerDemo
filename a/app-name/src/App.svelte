@@ -23,7 +23,7 @@
     lfoNode,
     audioFileNode,
   };
-
+  let nodeCount = 5;
   let nodes = $state.raw<Node[]>([
     {
       id: "1",
@@ -37,23 +37,16 @@
     },
     {
       id: "3",
-      type: "gainSliderNode",
-      data: { label: "gain node" },
-      position: { x: 300, y: 0 },
+      type: "audioFileNode",
+      data: { label: "audio file node" },
+      position: { x: 0, y: 300 },
       class: "svelte-flow__node-default",
     },
     {
       id: "4",
-      type: "lfoNode",
-      data: { label: "lfo node" },
-      position: { x: 300, y: 300 },
-      class: "svelte-flow__node-default",
-    },
-    {
-      id: "5",
-      type: "audioFileNode",
-      data: { label: "audio file node" },
-      position: { x: 0, y: 300 },
+      type: "gainSliderNode",
+      data: { label: "gain node" },
+      position: { x: 300, y: 0 },
       class: "svelte-flow__node-default",
     },
   ]);
@@ -64,31 +57,32 @@
   //listener function for when a connection is made
   function handleConnect(connection: Connection) {
     console.log("Connection made:", connection);
-
-    nodes = nodes.map((node) =>
-      node.id === connection.target
-        ? { ...node, data: { ...node.data, label: "Audio connected!" } }
-        : node,
-    );
-    if (connection.target === "2") {
-      audioSourceConnected = true;
-    }
-    if (connection.target === "3" && connection.source === "1") {
-      gainSliderConnected = true;
-      handleGainChange(nodes.find((n) => n.id === "3")?.data.gain as number);
-    }
-    if (audioSourceConnected && gainSliderConnected) {
-      handleGainChange(nodes.find((n) => n.id === "3")?.data.gain as number);
-    } else if (audioSourceConnected && !gainSliderConnected) {
-      handleGainChange(1);
-    }
-    if (
-      connection.source === "4" &&
-      connection.target === "3" &&
-      connection.targetHandle === "modulation"
-    ) {
-      LFOConnected = true;
-    }
+    const addConnection = Juce.getNativeFunction("addConnection");
+    addConnection(connection.source, connection.target);
+    // nodes = nodes.map((node) =>
+    //   node.id === connection.target
+    //     ? { ...node, data: { ...node.data, label: "Audio connected!" } }
+    //     : node,
+    // );
+    // if (connection.target === "2") {
+    //   audioSourceConnected = true;
+    // }
+    // if (connection.target === "3" && connection.source === "1") {
+    //   gainSliderConnected = true;
+    //   handleGainChange(nodes.find((n) => n.id === "3")?.data.gain as number);
+    // }
+    // if (audioSourceConnected && gainSliderConnected) {
+    //   handleGainChange(nodes.find((n) => n.id === "3")?.data.gain as number);
+    // } else if (audioSourceConnected && !gainSliderConnected) {
+    //   handleGainChange(1);
+    // }
+    // if (
+    //   connection.source === "4" &&
+    //   connection.target === "3" &&
+    //   connection.targetHandle === "modulation"
+    // ) {
+    //   LFOConnected = true;
+    // }
   }
   function handleKeyDown(event: KeyboardEvent) {
     if (event.key === "Backspace" || event.key === "Delete") {
@@ -100,40 +94,33 @@
     nodes: deletedNodes,
     edges: deletedEdges,
   }) => {
-    if (deletedEdges.length) {
-      console.log("Edges deleted:", deletedEdges);
+    if (deletedNodes.length > 0) {
+      // compute numeric ids of deleted nodes
+      const deletedIds = deletedNodes
+        .map((n) => Number(n.id))
+        .filter((x) => !Number.isNaN(x))
+        .sort((a, b) => a - b);
 
-      const deletedTargetIds = new Set(deletedEdges.map((e) => e.target));
+      nodes = nodes.map((n) => {
+        const cur = Number(n.id);
+        if (Number.isNaN(cur)) return n;
+        const shift = deletedIds.filter((d) => d < cur).length;
+        return { ...n, id: String(cur - shift) };
+      });
 
-      nodes = nodes.map((node) =>
-        deletedTargetIds.has(node.id)
-          ? { ...node, data: { ...node.data, label: "Audio disconnected!" } }
-          : node,
-      );
-      if (
-        deletedEdges.some(
-          (e) =>
-            e.target === "3" &&
-            audioSourceConnected &&
-            e.targetHandle != "modulation",
-        )
-      ) {
-        gainSliderConnected = false;
-        handleGainChange(1);
+      // keep nodeCount in sync with current nodes length
+      nodeCount = nodes.length + 1;
+      console.log(nodes);
+      console.log(nodeCount);
+      for (let i = 0; i < deletedNodes.length; i = i + 1) {
+        const deleteNode = Juce.getNativeFunction("deleteNode");
+        deleteNode(deletedNodes[i].id);
       }
-      if (deletedEdges.some((e) => e.target === "2")) {
-        audioSourceConnected = false;
-        handleGainChange(0);
-      }
-      if (
-        deletedEdges.some(
-          (e) => e.targetHandle === "modulation" && LFOConnected,
-        )
-      ) {
-        LFOConnected = false;
-        handleAmpChange(-1);
-        handleFreqChange(0);
-      }
+    }
+
+    if (deletedEdges && deletedEdges.length > 0) {
+      const removeConnection = Juce.getNativeFunction("removeConnection");
+      removeConnection(deletedEdges[0].source, deletedEdges[0].target);
     }
   };
 
@@ -189,12 +176,20 @@
   function addNode(
     type: "gainSliderNode" | "lfoNode" | "audioFileNode" = "gainSliderNode",
   ) {
-    const id = String(Date.now());
+    const newNodeBackend = Juce.getNativeFunction("newNode");
+
+    const id = String(nodeCount);
+    nodeCount = nodeCount + 1;
     const idx = nodes.length;
     const position = {
       x: 50 + (idx % 6) * 160,
       y: 50 + Math.floor(idx / 6) * 120,
     };
+    if (type == "gainSliderNode") {
+      newNodeBackend("gain");
+    } else if (type == "audioFileNode") {
+      newNodeBackend("sampler");
+    }
     const newNode = {
       id,
       type,

@@ -14,6 +14,9 @@ public:
     void prepareToPlay(double, int) override
     {
     }
+    virtual void setParameter(const juce::String &paramID, const juce::var &value) {}
+    virtual void triggerAction(const juce::String &actionID) {}
+
     void releaseResources() override {}
     void processBlock(juce::AudioSampleBuffer &, juce::MidiBuffer &) override {}
     //==============================================================================

@@ -42,22 +42,6 @@ namespace nodeSamplerWebview
 
         return {params.begin(), params.end()};
     }
-    void AudioPluginAudioProcessor::loadSample(const juce::String &filePath)
-    {
-        juce::File file(filePath);
-
-        if (auto *reader = formatManager.createReaderFor(file))
-        {
-            auto newSource = std::make_unique<juce::AudioFormatReaderSource>(reader, true);
-
-            if (auto *sampler = dynamic_cast<SamplePlayer *>(samplerNode->getProcessor()))
-            {
-                sampler->setSource(newSource.get(), getSampleRate());
-            }
-
-            readerSource = std::move(newSource); // must outlive the transportSource's use of it
-        }
-    }
     //==============================================================================
     const juce::String AudioPluginAudioProcessor::getName() const
     {
@@ -184,16 +168,44 @@ namespace nodeSamplerWebview
         auto playerNode = std::make_unique<SamplePlayer>();
         samplePlayer = playerNode.get();
         samplerNode = mainProcessor->addNode(std::move(playerNode));
-        connectAudioNodes();
+
+        auto gainNodeObject = std::make_unique<GainControl>();
+        gainControl = gainNodeObject.get();
+        gainNode = mainProcessor->addNode(std::move(gainNodeObject));
+        // connectAudioNodes();
+        nodes.push_back(audioInputNode);
+        nodes.push_back(audioOutputNode);
+        nodes.push_back(samplerNode);
+        nodes.push_back(gainNode);
     }
 
-    void AudioPluginAudioProcessor::connectAudioNodes()
+    void AudioPluginAudioProcessor::connectAudioNodes(int source, int target)
     {
+        auto sourceNode = nodes[source - 1];
+        auto targetNode = nodes[target - 1];
         for (int channel = 0; channel < 2; ++channel)
         {
-            mainProcessor->addConnection({{samplerNode->nodeID, channel},
-                                          {audioOutputNode->nodeID, channel}});
+            mainProcessor->addConnection({{sourceNode->nodeID, channel},
+                                          {targetNode->nodeID, channel}});
         }
+    }
+
+    void AudioPluginAudioProcessor::removeConnection(int source, int target)
+    {
+        auto sourceNode = nodes[source - 1];
+        auto targetNode = nodes[target - 1];
+        for (int channel = 0; channel < 2; ++channel)
+        {
+            mainProcessor->removeConnection({{sourceNode->nodeID, channel},
+                                             {targetNode->nodeID, channel}});
+        }
+    }
+
+    void AudioPluginAudioProcessor::deleteNode(int id)
+    {
+        std::cout << id << std::endl;
+        mainProcessor->removeNode(nodes[id - 1]);
+        nodes.erase(nodes.begin() + id - 1);
     }
 
     //==============================================================================
@@ -222,29 +234,90 @@ namespace nodeSamplerWebview
         // whose contents will have been created by the getStateInformation() call.
         juce::ignoreUnused(data, sizeInBytes);
     }
-    void AudioPluginAudioProcessor::startPlayback()
+    void AudioPluginAudioProcessor::startPlayback(int id)
     {
-        if (samplePlayer != nullptr)
+        if (id <= 0 || id > static_cast<int>(nodes.size()))
+            return;
+
+        auto node = nodes[id - 1];
+        if (!node)
+            return;
+
+        if (auto *processor = dynamic_cast<ProcessorBase *>(node->getProcessor()))
+            processor->triggerAction("start");
+    }
+    void AudioPluginAudioProcessor::stopPlayback(int id)
+    {
+        if (id <= 0 || id > static_cast<int>(nodes.size()))
+            return;
+
+        auto node = nodes[id - 1];
+        if (!node)
+            return;
+
+        if (auto *processor = dynamic_cast<ProcessorBase *>(node->getProcessor()))
+            processor->triggerAction("stop");
+    }
+
+    void AudioPluginAudioProcessor::newGainNode()
+    {
+        std::cout << "new node!" << std::endl;
+        auto gainNodeObject = std::make_unique<GainControl>();
+        gainControl = gainNodeObject.get();
+        gainNode = mainProcessor->addNode(std::move(gainNodeObject));
+        nodes.push_back(gainNode);
+        for (int i = 0; i < nodes.size(); i++)
         {
-            samplePlayer->stop();
-            samplePlayer->setPosition(0.0);
-            samplePlayer->start();
+            std::cout << nodes[i] << std::endl;
         }
     }
-
-    void AudioPluginAudioProcessor::stopPlayback()
+    void AudioPluginAudioProcessor::newNode(const juce::String &type)
     {
-        if (samplePlayer != nullptr)
-            samplePlayer->stop();
+        std::unique_ptr<juce::AudioProcessor> nodeObject;
+        std::cout << "new node!" << std::endl;
+        std::cout << type.toStdString() << std::endl;
+        if (type == "gain")
+        {
+            std::cout << "new gain node created" << std::endl;
+            nodeObject = std::make_unique<GainControl>();
+        }
+        else if (type == "sampler")
+        {
+            std::cout << "new sampler node" << std::endl;
+            nodeObject = std::make_unique<SamplePlayer>();
+        }
+        auto control = nodeObject.get();
+        juce::AudioProcessorGraph::Node::Ptr node = mainProcessor->addNode(std::move(nodeObject));
+        nodes.push_back(node);
+        for (int i = 0; i < nodes.size(); i++)
+        {
+            std::cout << nodes[i] << std::endl;
+        }
+    }
+    void AudioPluginAudioProcessor::adjustGain(float value, int id)
+    {
+        if (id <= 0 || id > static_cast<int>(nodes.size()))
+            return;
+
+        auto node = nodes[id - 1];
+        if (!node)
+            return;
+
+        if (auto *processor = dynamic_cast<ProcessorBase *>(node->getProcessor()))
+            processor->setParameter("adjustGain", value);
     }
 
-    void AudioPluginAudioProcessor::newSampler(const juce::String &filePath)
+    void AudioPluginAudioProcessor::loadSample(const juce::String &filePath, int id)
     {
-        auto playerNode = std::make_unique<SamplePlayer>();
-        samplePlayer = playerNode.get();
-        samplerNode = mainProcessor->addNode(std::move(playerNode));
-        if (!filePath.isEmpty())
-            loadSample(filePath);
+        if (id <= 0 || id > static_cast<int>(nodes.size()))
+            return;
+
+        auto node = nodes[id - 1];
+        if (!node)
+            return;
+
+        if (auto *processor = dynamic_cast<ProcessorBase *>(node->getProcessor()))
+            processor->setParameter("loadSample", filePath);
     }
 }
 

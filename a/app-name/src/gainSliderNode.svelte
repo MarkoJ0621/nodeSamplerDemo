@@ -5,6 +5,7 @@
         type NodeProps,
         Handle,
     } from "@xyflow/svelte";
+    import * as Juce from "./js/juce/index.js";
 
     let { id, data }: NodeProps = $props();
     let { updateNodeData } = useSvelteFlow();
@@ -12,6 +13,9 @@
     function handleGainChange(event: Event) {
         const value = Number((event.target as HTMLInputElement).value);
         updateNodeData(id, { gain: value });
+        const adjustGain = Juce.getNativeFunction("adjustGain");
+        adjustGain(value, id);
+        console.log(id);
     }
 </script>
 
@@ -21,8 +25,8 @@
         <input
             type="range"
             id="gain"
-            min="0"
-            max="1"
+            min="-60"
+            max="0"
             step="0.01"
             class="nodrag"
             value={data.displayGain ?? data.gain ?? 0}

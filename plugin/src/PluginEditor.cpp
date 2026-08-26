@@ -68,23 +68,49 @@ namespace nodeSamplerWebview
             float normalized = param->convertTo0to1((float)value);
             param->setValueNotifyingHost(normalized);
         } })
-                      .withNativeFunction("chooseFile", [this](const juce::Array<juce::var> &, juce::WebBrowserComponent::NativeFunctionCompletion completion)
+                      .withNativeFunction("chooseFile", [this](const juce::Array<juce::var> &args, juce::WebBrowserComponent::NativeFunctionCompletion completion)
                                           {
-        auto chooser = std::make_shared<juce::FileChooser>("are we", juce::File{}, "*.wav;*.aiff;*.mp3");
+    int id = args.size() > 0 ? (int) args[0] : -1;
+    auto chooser = std::make_shared<juce::FileChooser>("Select an audio file", juce::File{}, "*.wav;*.aiff;*.mp3");
 
+    chooser->launchAsync(juce::FileBrowserComponent::openMode | juce::FileBrowserComponent::canSelectFiles,
+        [this, completion, chooser, id](const juce::FileChooser &fc)
+        {
+            auto path = fc.getResult().getFullPathName();
 
-        chooser->launchAsync(juce::FileBrowserComponent::openMode | juce::FileBrowserComponent::canSelectFiles, [this, completion, chooser](const juce::FileChooser &fc)
-                             {
-        auto path = fc.getResult().getFullPathName();
-        processorRef.loadSample(path);   
-        completion(juce::var(path)); }); })
-                      .withNativeFunction("start", [this](const juce::Array<juce::var> &, juce::WebBrowserComponent::NativeFunctionCompletion completion)
+            if (path.isNotEmpty())
+                processorRef.loadSample(path, id);
+
+            completion(juce::var(path));
+        }); })
+                      .withNativeFunction("start", [this](const juce::Array<juce::var> &args, juce::WebBrowserComponent::NativeFunctionCompletion completion)
                                           {
-        processorRef.startPlayback();
+        processorRef.startPlayback(args[0]);
         completion("hello"); })
-                      .withNativeFunction("stop", [this](const juce::Array<juce::var> &, juce::WebBrowserComponent::NativeFunctionCompletion completion)
+                      .withNativeFunction("stop", [this](const juce::Array<juce::var> &args, juce::WebBrowserComponent::NativeFunctionCompletion completion)
                                           {
-        processorRef.stopPlayback();
+        processorRef.stopPlayback(args[0]);
+        completion("bye"); })
+                      .withNativeFunction("addConnection", [this](const juce::Array<juce::var> &args, juce::WebBrowserComponent::NativeFunctionCompletion completion)
+                                          {
+        processorRef.connectAudioNodes(args[0], args[1]);
+        completion("bye"); })
+                      .withNativeFunction("removeConnection", [this](const juce::Array<juce::var> &args, juce::WebBrowserComponent::NativeFunctionCompletion completion)
+                                          {
+        processorRef.removeConnection(args[0], args[1]);
+        completion("bye"); })
+                      .withNativeFunction("adjustGain", [this](const juce::Array<juce::var> &args, juce::WebBrowserComponent::NativeFunctionCompletion completion)
+                                          {
+        processorRef.adjustGain(args[0],args[1]);
+        completion("bye"); })
+                      .withNativeFunction("deleteNode", [this](const juce::Array<juce::var> &args, juce::WebBrowserComponent::NativeFunctionCompletion completion)
+                                          {
+        processorRef.deleteNode(args[0]);
+        completion("bye"); })
+                      .withNativeFunction("newNode", [this](const juce::Array<juce::var> &args, juce::WebBrowserComponent::NativeFunctionCompletion completion)
+                                          {
+                                            std::cout<<args[0].toString()<<std::endl;
+        processorRef.newNode(args[0].toString());
         completion("bye"); }))
     {
         juce::ignoreUnused(processorRef);

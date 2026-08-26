@@ -4,6 +4,7 @@
 #include <juce_audio_formats/juce_audio_formats.h>
 #include <juce_audio_devices/sources/juce_AudioTransportSource.h>
 #include "SamplePlayer.h"
+#include "GainControl.h"
 #include <vector>
 
 using AudioGraphIOProcessor = juce::AudioProcessorGraph::AudioGraphIOProcessor;
@@ -51,10 +52,16 @@ namespace nodeSamplerWebview
         void getStateInformation(juce::MemoryBlock &destData) override;
         void setStateInformation(const void *data, int sizeInBytes) override;
         juce::AudioProcessorValueTreeState parameters;
-        void loadSample(const juce::String &filePath);
-        void startPlayback();
-        void stopPlayback();
+        void loadSample(const juce::String &filePath, int id);
+        void startPlayback(int id);
+        void stopPlayback(int id);
         void newSampler(const juce::String &filePath);
+        void connectAudioNodes(int source, int target);
+        void removeConnection(int source, int target);
+        void adjustGain(float value, int id);
+        void newGainNode();
+        void deleteNode(int id);
+        void newNode(const juce::String &type);
 
     private:
         //==============================================================================
@@ -66,7 +73,6 @@ namespace nodeSamplerWebview
         std::unique_ptr<juce::AudioFormatReaderSource> readerSource;
         juce::AudioTransportSource transportSource;
         void initialiseGraph();
-        void connectAudioNodes();
         void updateGraph();
 
         std::unique_ptr<juce::AudioProcessorGraph> mainProcessor;
@@ -75,6 +81,10 @@ namespace nodeSamplerWebview
         juce::AudioProcessorGraph::Node::Ptr audioInputNode;
         juce::AudioProcessorGraph::Node::Ptr audioOutputNode;
         juce::AudioProcessorGraph::Node::Ptr samplerNode;
+        juce::AudioProcessorGraph::Node::Ptr gainNode;
+
         SamplePlayer *samplePlayer = nullptr;
+        GainControl *gainControl = nullptr;
+        std::vector<juce::AudioProcessorGraph::Node::Ptr> nodes;
     };
 }

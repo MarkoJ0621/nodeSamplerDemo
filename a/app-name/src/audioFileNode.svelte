@@ -22,12 +22,13 @@
     <div>
         <label for="text">File!</label>
         <!-- <input type="file" id="file" class="nodrag" oninput={handleFile} /> -->
-        <button onclick={() => Juce.getNativeFunction("chooseFile")()}
+        <button onclick={() => Juce.getNativeFunction("chooseFile")(id)}
             >hi</button
         >
 
-        <button onclick={() => Juce.getNativeFunction("start")()}>Play</button>
-        <button onclick={() => Juce.getNativeFunction("stop")()}>stop</button>
+        <button onclick={() => Juce.getNativeFunction("start")(id)}>Play</button
+        >
+        <button onclick={() => Juce.getNativeFunction("stop")(id)}>stop</button>
         <Handle type="source" position={Position.Bottom} />
         <Handle type="target" position={Position.Top} id="input" />
         <Handle type="target" position={Position.Right} id="modulation" />
