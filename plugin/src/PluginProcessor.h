@@ -5,6 +5,8 @@
 #include <juce_audio_devices/sources/juce_AudioTransportSource.h>
 #include "SamplePlayer.h"
 #include "GainControl.h"
+#include "LowpassNode.h"
+#include "HighpassNode.h"
 #include <vector>
 
 using AudioGraphIOProcessor = juce::AudioProcessorGraph::AudioGraphIOProcessor;
@@ -62,6 +64,8 @@ namespace nodeSamplerWebview
         void newGainNode();
         void deleteNode(int id);
         void newNode(const juce::String &type);
+        void setFrequency(float value, int id);
+        void setFrequencyHPF(float value, int id);
 
     private:
         //==============================================================================

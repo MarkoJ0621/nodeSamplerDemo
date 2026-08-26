@@ -14,6 +14,8 @@
   import gainSliderNode from "./gainSliderNode.svelte";
   import lfoNode from "./lfoNode.svelte";
   import audioFileNode from "./audioFileNode.svelte";
+  import lowpassNode from "./lowpassNode.svelte";
+  import highpassNode from "./highpassNode.svelte";
 
   import "@xyflow/svelte/dist/style.css";
   import { untrack } from "svelte";
@@ -22,6 +24,8 @@
     gainSliderNode,
     lfoNode,
     audioFileNode,
+    lowpassNode,
+    highpassNode,
   };
   let nodeCount = 5;
   let nodes = $state.raw<Node[]>([
@@ -174,7 +178,12 @@
   }
   // Add a node dynamically to the flow
   function addNode(
-    type: "gainSliderNode" | "lfoNode" | "audioFileNode" = "gainSliderNode",
+    type:
+      | "gainSliderNode"
+      | "lfoNode"
+      | "lowpassNode"
+      | "highpassNode"
+      | "audioFileNode" = "gainSliderNode",
   ) {
     const newNodeBackend = Juce.getNativeFunction("newNode");
 
@@ -189,6 +198,10 @@
       newNodeBackend("gain");
     } else if (type == "audioFileNode") {
       newNodeBackend("sampler");
+    } else if (type == "lowpassNode") {
+      newNodeBackend("lowpass");
+    } else if (type == "highpassNode") {
+      newNodeBackend("highpass");
     }
     const newNode = {
       id,
@@ -247,6 +260,8 @@
         <button onclick={() => addNode("gainSliderNode")}>Add Gain</button>
         <button onclick={() => addNode("lfoNode")}>Add LFO</button>
         <button onclick={() => addNode("audioFileNode")}>Add Audio File</button>
+        <button onclick={() => addNode("lowpassNode")}>add lowpass</button>
+        <button onclick={() => addNode("highpassNode")}>add highpass</button>
       </div>
     </Panel>
     <Panel position="top-right">hello...</Panel>

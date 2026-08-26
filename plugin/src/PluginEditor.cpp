@@ -111,6 +111,16 @@ namespace nodeSamplerWebview
                                           {
                                             std::cout<<args[0].toString()<<std::endl;
         processorRef.newNode(args[0].toString());
+        completion("bye"); })
+                      .withNativeFunction("setFreq", [this](const juce::Array<juce::var> &args, juce::WebBrowserComponent::NativeFunctionCompletion completion)
+                                          {
+                                            std::cout<<args[0].toString()<<std::endl;
+        processorRef.setFrequency(args[0],args[1]);
+        completion("bye"); })
+                      .withNativeFunction("setFreqHPF", [this](const juce::Array<juce::var> &args, juce::WebBrowserComponent::NativeFunctionCompletion completion)
+                                          {
+                                            std::cout<<args[0].toString()<<std::endl;
+        processorRef.setFrequencyHPF(args[0],args[1]);
         completion("bye"); }))
     {
         juce::ignoreUnused(processorRef);

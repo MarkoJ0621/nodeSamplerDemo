@@ -281,6 +281,14 @@ namespace nodeSamplerWebview
             std::cout << "new gain node created" << std::endl;
             nodeObject = std::make_unique<GainControl>();
         }
+        else if (type == "lowpass")
+        {
+            nodeObject = std::make_unique<LowpassNode>();
+        }
+        else if (type == "highpass")
+        {
+            nodeObject = std::make_unique<HighpassNode>();
+        }
         else if (type == "sampler")
         {
             std::cout << "new sampler node" << std::endl;
@@ -305,6 +313,31 @@ namespace nodeSamplerWebview
 
         if (auto *processor = dynamic_cast<ProcessorBase *>(node->getProcessor()))
             processor->setParameter("adjustGain", value);
+    }
+
+    void AudioPluginAudioProcessor::setFrequency(float value, int id)
+    {
+        if (id <= 0 || id > static_cast<int>(nodes.size()))
+            return;
+
+        auto node = nodes[id - 1];
+        if (!node)
+            return;
+
+        if (auto *processor = dynamic_cast<ProcessorBase *>(node->getProcessor()))
+            processor->setParameter("setFrequency", value);
+    }
+    void AudioPluginAudioProcessor::setFrequencyHPF(float value, int id)
+    {
+        if (id <= 0 || id > static_cast<int>(nodes.size()))
+            return;
+
+        auto node = nodes[id - 1];
+        if (!node)
+            return;
+
+        if (auto *processor = dynamic_cast<ProcessorBase *>(node->getProcessor()))
+            processor->setParameter("setFrequencyHPF", value);
     }
 
     void AudioPluginAudioProcessor::loadSample(const juce::String &filePath, int id)
