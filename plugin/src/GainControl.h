@@ -15,6 +15,10 @@ public:
     }
 
     GainControl()
+        : ProcessorBase(BusesProperties()
+                            .withInput("Input", juce::AudioChannelSet::stereo())
+                            .withInput("Modulation", juce::AudioChannelSet::mono())
+                            .withOutput("Output", juce::AudioChannelSet::stereo()))
     {
         gain.setGainDecibels(-6.0f);
     }
@@ -31,9 +35,24 @@ public:
 
     void processBlock(juce::AudioSampleBuffer &buffer, juce::MidiBuffer &) override
     {
-        juce::dsp::AudioBlock<float> block(buffer);
+        auto mainBuffer = getBusBuffer(buffer, true, 0); // main stereo input/output, in-place
+        auto modBuffer = getBusBuffer(buffer, true, 1);  // modulation input
+
+        juce::dsp::AudioBlock<float> block(mainBuffer);
         juce::dsp::ProcessContextReplacing<float> context(block);
         gain.process(context);
+
+        if (modBuffer.getNumChannels() == 0)
+            return; // nothing connected to modulation input — skip
+
+        auto *modData = modBuffer.getReadPointer(0);
+
+        for (int ch = 0; ch < mainBuffer.getNumChannels(); ++ch)
+        {
+            auto *data = mainBuffer.getWritePointer(ch);
+            for (int i = 0; i < mainBuffer.getNumSamples(); ++i)
+                data[i] *= 1.0f + modData[i];
+        }
     }
     void reset() override
     {

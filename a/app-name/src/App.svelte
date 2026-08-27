@@ -62,31 +62,12 @@
   function handleConnect(connection: Connection) {
     console.log("Connection made:", connection);
     const addConnection = Juce.getNativeFunction("addConnection");
-    addConnection(connection.source, connection.target);
-    // nodes = nodes.map((node) =>
-    //   node.id === connection.target
-    //     ? { ...node, data: { ...node.data, label: "Audio connected!" } }
-    //     : node,
-    // );
-    // if (connection.target === "2") {
-    //   audioSourceConnected = true;
-    // }
-    // if (connection.target === "3" && connection.source === "1") {
-    //   gainSliderConnected = true;
-    //   handleGainChange(nodes.find((n) => n.id === "3")?.data.gain as number);
-    // }
-    // if (audioSourceConnected && gainSliderConnected) {
-    //   handleGainChange(nodes.find((n) => n.id === "3")?.data.gain as number);
-    // } else if (audioSourceConnected && !gainSliderConnected) {
-    //   handleGainChange(1);
-    // }
-    // if (
-    //   connection.source === "4" &&
-    //   connection.target === "3" &&
-    //   connection.targetHandle === "modulation"
-    // ) {
-    //   LFOConnected = true;
-    // }
+    if (connection.targetHandle === "modulation") {
+      console.log("modulation connection made");
+      addConnection(connection.source, connection.target, 2);
+    } else {
+      addConnection(connection.source, connection.target, 0);
+    }
   }
   function handleKeyDown(event: KeyboardEvent) {
     if (event.key === "Backspace" || event.key === "Delete") {
@@ -124,7 +105,10 @@
 
     if (deletedEdges && deletedEdges.length > 0) {
       const removeConnection = Juce.getNativeFunction("removeConnection");
-      removeConnection(deletedEdges[0].source, deletedEdges[0].target);
+      if (deletedEdges[0].targetHandle === "modulation") {
+        removeConnection(deletedEdges[0].source, deletedEdges[0].target, 2);
+      }
+      removeConnection(deletedEdges[0].source, deletedEdges[0].target, 0);
     }
   };
 
@@ -179,11 +163,11 @@
   // Add a node dynamically to the flow
   function addNode(
     type:
-      | "gainSliderNode"
+      | "gainNode"
       | "lfoNode"
       | "lowpassNode"
       | "highpassNode"
-      | "audioFileNode" = "gainSliderNode",
+      | "samplerNode",
   ) {
     const newNodeBackend = Juce.getNativeFunction("newNode");
 
@@ -194,15 +178,7 @@
       x: 50 + (idx % 6) * 160,
       y: 50 + Math.floor(idx / 6) * 120,
     };
-    if (type == "gainSliderNode") {
-      newNodeBackend("gain");
-    } else if (type == "audioFileNode") {
-      newNodeBackend("sampler");
-    } else if (type == "lowpassNode") {
-      newNodeBackend("lowpass");
-    } else if (type == "highpassNode") {
-      newNodeBackend("highpass");
-    }
+    newNodeBackend(type);
     const newNode = {
       id,
       type,
@@ -213,37 +189,6 @@
 
     nodes = [...nodes, newNode];
   }
-  let lfoLiveValue = $derived(
-    nodes.find((n) => n.id === "4")?.data.value as number | undefined,
-  );
-
-  $effect(() => {
-    if (LFOConnected && lfoLiveValue !== undefined && gainValue !== undefined) {
-      const modulated = Math.max(
-        0,
-        Math.min(1, (gainValue as number) + lfoLiveValue),
-      );
-
-      untrack(() => {
-        const current = nodes.find((n) => n.id === "3");
-        if (current?.data.displayGain !== modulated) {
-          nodes = nodes.map((node) =>
-            node.id === "3"
-              ? { ...node, data: { ...node.data, displayGain: modulated } }
-              : node,
-          );
-        }
-      });
-    } else {
-      untrack(() => {
-        nodes = nodes.map((node) =>
-          node.id === "3" && node.data.displayGain !== undefined
-            ? { ...node, data: { ...node.data, displayGain: undefined } }
-            : node,
-        );
-      });
-    }
-  });
 </script>
 
 <svelte:window onkeydown={handleKeyDown} />
@@ -257,9 +202,9 @@
   >
     <Panel position="top-left">
       <div style="display:flex;gap:8px;align-items:center;">
-        <button onclick={() => addNode("gainSliderNode")}>Add Gain</button>
+        <button onclick={() => addNode("gainNode")}>Add Gain</button>
         <button onclick={() => addNode("lfoNode")}>Add LFO</button>
-        <button onclick={() => addNode("audioFileNode")}>Add Audio File</button>
+        <button onclick={() => addNode("samplerNode")}>Add Audio File</button>
         <button onclick={() => addNode("lowpassNode")}>add lowpass</button>
         <button onclick={() => addNode("highpassNode")}>add highpass</button>
       </div>

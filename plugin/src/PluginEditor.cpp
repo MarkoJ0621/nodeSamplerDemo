@@ -93,11 +93,11 @@ namespace nodeSamplerWebview
         completion("bye"); })
                       .withNativeFunction("addConnection", [this](const juce::Array<juce::var> &args, juce::WebBrowserComponent::NativeFunctionCompletion completion)
                                           {
-        processorRef.connectAudioNodes(args[0], args[1]);
+        processorRef.connectAudioNodes(args[0], args[1],args[2]);
         completion("bye"); })
                       .withNativeFunction("removeConnection", [this](const juce::Array<juce::var> &args, juce::WebBrowserComponent::NativeFunctionCompletion completion)
                                           {
-        processorRef.removeConnection(args[0], args[1]);
+        processorRef.removeConnection(args[0], args[1], args[2]);
         completion("bye"); })
                       .withNativeFunction("deleteNode", [this](const juce::Array<juce::var> &args, juce::WebBrowserComponent::NativeFunctionCompletion completion)
                                           {

@@ -7,6 +7,7 @@
 #include "GainControl.h"
 #include "LowpassNode.h"
 #include "HighpassNode.h"
+#include "LFONode.h"
 #include <vector>
 
 using AudioGraphIOProcessor = juce::AudioProcessorGraph::AudioGraphIOProcessor;
@@ -58,8 +59,8 @@ namespace nodeSamplerWebview
         void startPlayback(int id);
         void stopPlayback(int id);
         void newSampler(const juce::String &filePath);
-        void connectAudioNodes(int source, int target);
-        void removeConnection(int source, int target);
+        void connectAudioNodes(int source, int target, int channel);
+        void removeConnection(int source, int target, int channel);
         void adjustGain(float value, int id);
         void newGainNode();
         void deleteNode(int id);

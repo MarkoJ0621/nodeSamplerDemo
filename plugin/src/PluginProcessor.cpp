@@ -179,25 +179,50 @@ namespace nodeSamplerWebview
         nodes.push_back(gainNode);
     }
 
-    void AudioPluginAudioProcessor::connectAudioNodes(int source, int target)
+    void AudioPluginAudioProcessor::connectAudioNodes(int source, int target, int channel)
     {
+        if (source <= 0 || target <= 0 || source > static_cast<int>(nodes.size()) || target > static_cast<int>(nodes.size()))
+            return;
+
         auto sourceNode = nodes[source - 1];
         auto targetNode = nodes[target - 1];
-        for (int channel = 0; channel < 2; ++channel)
+        if (!sourceNode || !targetNode)
+            return;
+
+        if (channel == 0 || channel == 1)
         {
-            mainProcessor->addConnection({{sourceNode->nodeID, channel},
+            for (int channel = 0; channel < 2; ++channel)
+            {
+                mainProcessor->addConnection({{sourceNode->nodeID, channel},
+                                              {targetNode->nodeID, channel}});
+            }
+        }
+
+        if (channel == 2)
+        {
+            mainProcessor->addConnection({{sourceNode->nodeID, 0},
                                           {targetNode->nodeID, channel}});
+            return;
         }
     }
 
-    void AudioPluginAudioProcessor::removeConnection(int source, int target)
+    void AudioPluginAudioProcessor::removeConnection(int source, int target, int channel)
     {
         auto sourceNode = nodes[source - 1];
         auto targetNode = nodes[target - 1];
-        for (int channel = 0; channel < 2; ++channel)
+        if (channel == 2)
         {
-            mainProcessor->removeConnection({{sourceNode->nodeID, channel},
+            mainProcessor->removeConnection({{sourceNode->nodeID, 0},
                                              {targetNode->nodeID, channel}});
+            return;
+        }
+        else
+        {
+            for (int channel = 0; channel < 2; ++channel)
+            {
+                mainProcessor->removeConnection({{sourceNode->nodeID, channel},
+                                                 {targetNode->nodeID, channel}});
+            }
         }
     }
 
@@ -276,23 +301,29 @@ namespace nodeSamplerWebview
         std::unique_ptr<juce::AudioProcessor> nodeObject;
         std::cout << "new node!" << std::endl;
         std::cout << type.toStdString() << std::endl;
-        if (type == "gain")
+        if (type == "gainNode")
         {
             std::cout << "new gain node created" << std::endl;
             nodeObject = std::make_unique<GainControl>();
         }
-        else if (type == "lowpass")
+        else if (type == "lowpassNode")
         {
+            std::cout << "here???" << std::endl;
             nodeObject = std::make_unique<LowpassNode>();
         }
-        else if (type == "highpass")
+        else if (type == "highpassNode")
         {
             nodeObject = std::make_unique<HighpassNode>();
         }
-        else if (type == "sampler")
+        else if (type == "samplerNode")
         {
             std::cout << "new sampler node" << std::endl;
             nodeObject = std::make_unique<SamplePlayer>();
+        }
+        else if (type == "lfoNode")
+        {
+            std::cout << "new sampler node" << std::endl;
+            nodeObject = std::make_unique<LfoNode>();
         }
         auto control = nodeObject.get();
         juce::AudioProcessorGraph::Node::Ptr node = mainProcessor->addNode(std::move(nodeObject));
@@ -302,43 +333,7 @@ namespace nodeSamplerWebview
             std::cout << nodes[i] << std::endl;
         }
     }
-    void AudioPluginAudioProcessor::adjustGain(float value, int id)
-    {
-        if (id <= 0 || id > static_cast<int>(nodes.size()))
-            return;
 
-        auto node = nodes[id - 1];
-        if (!node)
-            return;
-
-        if (auto *processor = dynamic_cast<ProcessorBase *>(node->getProcessor()))
-            processor->setParameter("adjustGain", value);
-    }
-
-    void AudioPluginAudioProcessor::setFrequency(float value, int id)
-    {
-        if (id <= 0 || id > static_cast<int>(nodes.size()))
-            return;
-
-        auto node = nodes[id - 1];
-        if (!node)
-            return;
-
-        if (auto *processor = dynamic_cast<ProcessorBase *>(node->getProcessor()))
-            processor->setParameter("setFrequency", value);
-    }
-    void AudioPluginAudioProcessor::setFrequencyHPF(float value, int id)
-    {
-        if (id <= 0 || id > static_cast<int>(nodes.size()))
-            return;
-
-        auto node = nodes[id - 1];
-        if (!node)
-            return;
-
-        if (auto *processor = dynamic_cast<ProcessorBase *>(node->getProcessor()))
-            processor->setParameter("setFrequencyHPF", value);
-    }
     void AudioPluginAudioProcessor::setParameter(float value, int id, const juce::String &paramID)
     {
         if (id <= 0 || id > static_cast<int>(nodes.size()))
@@ -347,7 +342,6 @@ namespace nodeSamplerWebview
         auto node = nodes[id - 1];
         if (!node)
             return;
-        std::cout << paramID << std::endl;
         if (auto *processor = dynamic_cast<ProcessorBase *>(node->getProcessor()))
             processor->setParameter(paramID, value);
     }

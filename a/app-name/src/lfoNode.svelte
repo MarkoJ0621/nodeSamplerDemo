@@ -6,17 +6,19 @@
         Handle,
     } from "@xyflow/svelte";
     import { onMount, onDestroy } from "svelte";
-
+    import * as Juce from "./js/juce/index.js";
     let { id, data }: NodeProps = $props();
     let { updateNodeData } = useSvelteFlow();
-
+    let setParameter = Juce.getNativeFunction("setParameter");
     function updateFreq(event: Event) {
         const value = Number((event.target as HTMLInputElement).value);
         updateNodeData(id, { freq: value });
+        setParameter(value, id, "lfofreq");
     }
     function updateAmplitude(event: Event) {
         const value = Number((event.target as HTMLInputElement).value);
         updateNodeData(id, { amplitude: value });
+        setParameter(value, id, "lfoamp");
     }
 </script>
 
