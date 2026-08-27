@@ -1,12 +1,13 @@
 #include <juce_audio_processors/juce_audio_processors.h>
 #include <juce_audio_formats/juce_audio_formats.h>
 #include <juce_dsp/juce_dsp.h>
+
 class GainControl : public ProcessorBase
 {
 public:
     virtual void setParameter(const juce::String &paramID, const juce::var &value) override
     {
-        if (paramID == "adjustGain")
+        if (paramID == "gain")
         {
             std::cout << "gain adjusted to " << int(value) << std::endl;
             adjustGain(value);

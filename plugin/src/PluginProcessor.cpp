@@ -339,6 +339,18 @@ namespace nodeSamplerWebview
         if (auto *processor = dynamic_cast<ProcessorBase *>(node->getProcessor()))
             processor->setParameter("setFrequencyHPF", value);
     }
+    void AudioPluginAudioProcessor::setParameter(float value, int id, const juce::String &paramID)
+    {
+        if (id <= 0 || id > static_cast<int>(nodes.size()))
+            return;
+
+        auto node = nodes[id - 1];
+        if (!node)
+            return;
+        std::cout << paramID << std::endl;
+        if (auto *processor = dynamic_cast<ProcessorBase *>(node->getProcessor()))
+            processor->setParameter(paramID, value);
+    }
 
     void AudioPluginAudioProcessor::loadSample(const juce::String &filePath, int id)
     {

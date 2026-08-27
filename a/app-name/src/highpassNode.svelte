@@ -13,8 +13,8 @@
     function handleCutoffChange(event: Event) {
         const value = Number((event.target as HTMLInputElement).value);
         updateNodeData(id, { cutoff: value });
-        const setFrequency = Juce.getNativeFunction("setFreq");
-        setFrequency(value, id);
+        const setFrequency = Juce.getNativeFunction("setParameter");
+        setFrequency(value, id, "frequencyHPF");
     }
 </script>
 

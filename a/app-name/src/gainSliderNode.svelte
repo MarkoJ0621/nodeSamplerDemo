@@ -13,8 +13,8 @@
     function handleGainChange(event: Event) {
         const value = Number((event.target as HTMLInputElement).value);
         updateNodeData(id, { gain: value });
-        const adjustGain = Juce.getNativeFunction("adjustGain");
-        adjustGain(value, id);
+        const adjustGain = Juce.getNativeFunction("setParameter");
+        adjustGain(value, id, "gain");
         console.log(id);
     }
 </script>

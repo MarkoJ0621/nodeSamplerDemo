@@ -7,10 +7,9 @@ class LowpassNode : public ProcessorBase
 public:
     virtual void setParameter(const juce::String &paramID, const juce::var &value) override
     {
-        if (paramID == "setFrequency")
+        if (paramID == "frequency")
         {
             setFrequency(value);
-            std::cout << "freq adjusted to " << int(value) << std::endl;
         }
     }
     void setFrequency(float newFrequency)

@@ -66,6 +66,7 @@ namespace nodeSamplerWebview
         void newNode(const juce::String &type);
         void setFrequency(float value, int id);
         void setFrequencyHPF(float value, int id);
+        void setParameter(float value, int id, const juce::String &paramID);
 
     private:
         //==============================================================================
