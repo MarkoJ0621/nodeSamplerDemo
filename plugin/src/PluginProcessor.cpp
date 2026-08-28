@@ -50,11 +50,7 @@ namespace nodeSamplerWebview
 
     bool AudioPluginAudioProcessor::acceptsMidi() const
     {
-#if JucePlugin_WantsMidiInput
         return true;
-#else
-        return false;
-#endif
     }
 
     bool AudioPluginAudioProcessor::producesMidi() const
@@ -155,8 +151,31 @@ namespace nodeSamplerWebview
     void AudioPluginAudioProcessor::processBlock(juce::AudioBuffer<float> &buffer,
                                                  juce::MidiBuffer &midiMessages)
     {
-        juce::ignoreUnused(midiMessages);
         juce::ScopedNoDenormals noDenormals;
+
+        for (const auto metadata : midiMessages)
+        {
+            const auto message = metadata.getMessage();
+            if (!message.isNoteOn()
+                || message.getVelocity() <= 0)
+                continue;
+
+            for (int i = 0; i < static_cast<int>(nodes.size()); ++i)
+            {
+                auto node = nodes[i];
+                if (!node)
+                    continue;
+
+                if (auto *triggerNode = dynamic_cast<MidiTriggerNode *>(node->getProcessor()))
+                {
+                    if (triggerNode->matchesNoteNumber(message.getNoteNumber()))
+                    {
+                        triggerSamplersConnectedTo(i + 1);
+                        break;
+                    }
+                }
+            }
+        }
 
         mainProcessor->processBlock(buffer, midiMessages);
     }
@@ -172,7 +191,6 @@ namespace nodeSamplerWebview
         auto gainNodeObject = std::make_unique<GainControl>();
         gainControl = gainNodeObject.get();
         gainNode = mainProcessor->addNode(std::move(gainNodeObject));
-        // connectAudioNodes();
         nodes.push_back(audioInputNode);
         nodes.push_back(audioOutputNode);
         nodes.push_back(samplerNode);
@@ -325,6 +343,10 @@ namespace nodeSamplerWebview
             std::cout << "new sampler node" << std::endl;
             nodeObject = std::make_unique<LfoNode>();
         }
+        else if (type == "midiTriggerNode")
+        {
+            nodeObject = std::make_unique<AudioGraphIOProcessor>(AudioGraphIOProcessor::audioOutputNode);
+        }
         auto control = nodeObject.get();
         juce::AudioProcessorGraph::Node::Ptr node = mainProcessor->addNode(std::move(nodeObject));
         nodes.push_back(node);
@@ -334,6 +356,40 @@ namespace nodeSamplerWebview
         }
     }
 
+    void AudioPluginAudioProcessor::triggerSamplersConnectedTo(int outputId)
+    {
+        if (outputId <= 0 || outputId > static_cast<int>(nodes.size()))
+            return;
+
+        auto outputNode = nodes[outputId - 1];
+        if (!outputNode)
+            return;
+
+        std::unordered_set<juce::uint32> visited;
+        std::vector<juce::AudioProcessorGraph::NodeID> toVisit{outputNode->nodeID};
+        visited.insert(outputNode->nodeID.uid);
+
+        auto connections = mainProcessor->getConnections();
+
+        while (!toVisit.empty())
+        {
+            auto current = toVisit.back();
+            toVisit.pop_back();
+
+            for (auto &c : connections)
+            {
+                if (c.destination.nodeID == current && visited.find(c.source.nodeID.uid) == visited.end())
+                {
+                    visited.insert(c.source.nodeID.uid);
+                    toVisit.push_back(c.source.nodeID);
+
+                    if (auto sourceNode = mainProcessor->getNodeForId(c.source.nodeID))
+                        if (auto *processor = dynamic_cast<ProcessorBase *>(sourceNode->getProcessor()))
+                            processor->triggerAction("start");
+                }
+            }
+        }
+    }
     void AudioPluginAudioProcessor::setParameter(float value, int id, const juce::String &paramID)
     {
         std::cout << id << std::endl;

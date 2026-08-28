@@ -14,10 +14,10 @@
 
   import gainSliderNode from "./gainSliderNode.svelte";
   import lfoNode from "./lfoNode.svelte";
-  import audioFileNode from "./audioFileNode.svelte";
+  import samplerNode from "./samplerNode.svelte";
   import lowpassNode from "./lowpassNode.svelte";
   import highpassNode from "./highpassNode.svelte";
-
+  import midiTriggerNode from "./midiTriggerNode.svelte";
   import "@xyflow/svelte/dist/style.css";
   import { untrack } from "svelte";
   import modulationEdge from "./modulationEdge.svelte";
@@ -27,9 +27,10 @@
   const nodeTypes = {
     gainSliderNode,
     lfoNode,
-    audioFileNode,
+    samplerNode,
     lowpassNode,
     highpassNode,
+    midiTriggerNode,
   };
 
   const edgeTypes = {
@@ -49,7 +50,7 @@
     },
     {
       id: "3",
-      type: "audioFileNode",
+      type: "samplerNode",
       data: { label: "audio file node" },
       position: { x: 0, y: 300 },
       class: "svelte-flow__node-default",
@@ -193,7 +194,8 @@
       | "lfoNode"
       | "lowpassNode"
       | "highpassNode"
-      | "samplerNode",
+      | "samplerNode"
+      | "midiTriggerNode",
   ) {
     const newNodeBackend = Juce.getNativeFunction("newNode");
 
@@ -235,6 +237,9 @@
         <button onclick={() => addNode("samplerNode")}>Add Audio File</button>
         <button onclick={() => addNode("lowpassNode")}>add lowpass</button>
         <button onclick={() => addNode("highpassNode")}>add highpass</button>
+        <button onclick={() => addNode("midiTriggerNode")}
+          >add MIDI trigger</button
+        >
       </div>
     </Panel>
     <Panel position="top-right">hello...</Panel>

@@ -1,5 +1,6 @@
 #include "PluginProcessor.h"
 #include "PluginEditor.h"
+#include <unordered_set>
 
 //==============================================================================
 namespace nodeSamplerWebview
@@ -111,7 +112,12 @@ namespace nodeSamplerWebview
                       .withNativeFunction("setParameter", [this](const juce::Array<juce::var> &args, juce::WebBrowserComponent::NativeFunctionCompletion completion)
                                           {
         processorRef.setParameter(args[0],args[1],args[2]);
-        completion("bye"); }))
+        completion("bye"); })
+                      .withNativeFunction("triggerOutput", [this](const juce::Array<juce::var> &args, juce::WebBrowserComponent::NativeFunctionCompletion completion)
+                                          {
+    int id = args.size() > 0 ? (int) args[0] : -1;
+    processorRef.triggerSamplersConnectedTo(id);
+    completion(juce::var()); }))
     {
         juce::ignoreUnused(processorRef);
         addAndMakeVisible(webView);

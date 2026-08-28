@@ -12,6 +12,10 @@ public:
             std::cout << "gain adjusted to " << int(value) << std::endl;
             adjustGain(value);
         }
+        if (paramID == "modulationDepth")
+        {
+            modDepth = value;
+        }
     }
 
     GainControl()
@@ -46,12 +50,11 @@ public:
             return; // nothing connected to modulation input — skip
 
         auto *modData = modBuffer.getReadPointer(0);
-
         for (int ch = 0; ch < mainBuffer.getNumChannels(); ++ch)
         {
             auto *data = mainBuffer.getWritePointer(ch);
             for (int i = 0; i < mainBuffer.getNumSamples(); ++i)
-                data[i] *= 1.0f + modData[i];
+                data[i] *= 1.0f + (modData[i] * modDepth);
         }
     }
     void reset() override
@@ -61,4 +64,5 @@ public:
 
 private:
     juce::dsp::Gain<float> gain;
+    float modDepth = 0;
 };

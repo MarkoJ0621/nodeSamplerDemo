@@ -8,6 +8,7 @@
 #include "LowpassNode.h"
 #include "HighpassNode.h"
 #include "LFONode.h"
+#include "MidiTriggerNode.h"
 #include <vector>
 
 using AudioGraphIOProcessor = juce::AudioProcessorGraph::AudioGraphIOProcessor;
@@ -68,6 +69,7 @@ namespace nodeSamplerWebview
         void setFrequency(float value, int id);
         void setFrequencyHPF(float value, int id);
         void setParameter(float value, int id, const juce::String &paramID);
+        void triggerSamplersConnectedTo(int outputId);
 
     private:
         //==============================================================================

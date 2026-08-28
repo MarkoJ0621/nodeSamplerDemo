@@ -7,6 +7,7 @@
     } from "@xyflow/svelte";
     import { onMount, onDestroy } from "svelte";
     import * as Juce from "./js/juce/index.js";
+
     let { id, data }: NodeProps = $props();
     let { updateNodeData } = useSvelteFlow();
     let setParameter = Juce.getNativeFunction("setParameter");
@@ -46,6 +47,7 @@
             value={data.amplitude ?? 0}
             oninput={updateAmplitude}
         />
+
         <label for="amplitude">Amplitude</label>
         <Handle type="source" position={Position.Bottom} />
     </div>
