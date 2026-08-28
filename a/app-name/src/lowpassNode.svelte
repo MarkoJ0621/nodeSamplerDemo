@@ -10,11 +10,20 @@
     let { id, data }: NodeProps = $props();
     let { updateNodeData } = useSvelteFlow();
 
-    function handleCutoffChange(event: Event) {
-        const value = Number((event.target as HTMLInputElement).value);
-        updateNodeData(id, { cutoff: value });
-        const setFrequency = Juce.getNativeFunction("setParameter");
-        setFrequency(value, id, "frequency");
+    function sliderToFrequency(
+        sliderValue: number,
+        min = 20,
+        max = 20000,
+    ): number {
+        return min * Math.pow(max / min, sliderValue);
+    }
+
+    function frequencyToSlider(
+        frequency: number,
+        min = 20,
+        max = 20000,
+    ): number {
+        return Math.log(frequency / min) / Math.log(max / min);
     }
 </script>
 
@@ -23,13 +32,17 @@
         <label for="text">LPF</label>
         <input
             type="range"
-            id="cutoff"
-            min="100"
-            max="20000"
-            step="0.01"
+            min="0"
+            max="1"
+            step="0.0001"
             class="nodrag"
-            value={data.displayGain ?? data.gain ?? 0}
-            oninput={handleCutoffChange}
+            value={frequencyToSlider(Number(data.cutoff ?? 1000))}
+            oninput={(e) => {
+                const sliderVal = Number((e.target as HTMLInputElement).value);
+                const freq = sliderToFrequency(sliderVal);
+                updateNodeData(id, { cutoff: freq });
+                Juce.getNativeFunction("setParameter")(freq, id, "frequency");
+            }}
         />
         <Handle type="source" position={Position.Bottom} />
         <Handle type="target" position={Position.Top} id="input" />

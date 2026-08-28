@@ -5,6 +5,7 @@
     Background,
     MiniMap,
     Panel,
+    addEdge,
     type Node,
     type Edge,
     type OnDelete,
@@ -19,6 +20,9 @@
 
   import "@xyflow/svelte/dist/style.css";
   import { untrack } from "svelte";
+  import modulationEdge from "./modulationEdge.svelte";
+
+  let edges = $state.raw<Edge[]>([]);
 
   const nodeTypes = {
     gainSliderNode,
@@ -26,6 +30,10 @@
     audioFileNode,
     lowpassNode,
     highpassNode,
+  };
+
+  const edgeTypes = {
+    modulationEdge,
   };
   let nodeCount = 5;
   let nodes = $state.raw<Node[]>([
@@ -68,7 +76,25 @@
     } else {
       addConnection(connection.source, connection.target, 0);
     }
+    const type =
+      connection.targetHandle === "modulation" ? "modulationEdge" : undefined;
+    console.log(type);
+    edges = addEdge({ ...connection, type }, edges);
+    console.log(edges);
   }
+  $effect(() => {
+    const needsFix = edges.some(
+      (e) => e.targetHandle === "modulation" && e.type !== "modulationEdge",
+    );
+    if (needsFix) {
+      edges = edges.map((e) =>
+        e.targetHandle === "modulation" && e.type !== "modulationEdge"
+          ? { ...e, type: "modulationEdge" }
+          : e,
+      );
+    }
+  });
+
   function handleKeyDown(event: KeyboardEvent) {
     if (event.key === "Backspace" || event.key === "Delete") {
       event.preventDefault();
@@ -195,7 +221,9 @@
 <div style:height="100vh">
   <SvelteFlow
     bind:nodes
+    bind:edges
     {nodeTypes}
+    {edgeTypes}
     fitView
     onconnect={handleConnect}
     ondelete={handleDelete}

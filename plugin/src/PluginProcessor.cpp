@@ -336,9 +336,9 @@ namespace nodeSamplerWebview
 
     void AudioPluginAudioProcessor::setParameter(float value, int id, const juce::String &paramID)
     {
+        std::cout << id << std::endl;
         if (id <= 0 || id > static_cast<int>(nodes.size()))
             return;
-
         auto node = nodes[id - 1];
         if (!node)
             return;
