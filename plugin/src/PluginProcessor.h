@@ -9,6 +9,7 @@
 #include "HighpassNode.h"
 #include "LFONode.h"
 #include "MidiTriggerNode.h"
+#include "DelayNode.h"
 #include <vector>
 
 using AudioGraphIOProcessor = juce::AudioProcessorGraph::AudioGraphIOProcessor;

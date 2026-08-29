@@ -18,6 +18,8 @@
   import lowpassNode from "./lowpassNode.svelte";
   import highpassNode from "./highpassNode.svelte";
   import midiTriggerNode from "./midiTriggerNode.svelte";
+  import delayNode from "./delayNode.svelte";
+
   import "@xyflow/svelte/dist/style.css";
   import { untrack } from "svelte";
   import modulationEdge from "./modulationEdge.svelte";
@@ -31,6 +33,7 @@
     lowpassNode,
     highpassNode,
     midiTriggerNode,
+    delayNode,
   };
 
   const edgeTypes = {
@@ -195,7 +198,8 @@
       | "lowpassNode"
       | "highpassNode"
       | "samplerNode"
-      | "midiTriggerNode",
+      | "midiTriggerNode"
+      | "delayNode",
   ) {
     const newNodeBackend = Juce.getNativeFunction("newNode");
 
@@ -240,6 +244,7 @@
         <button onclick={() => addNode("midiTriggerNode")}
           >add MIDI trigger</button
         >
+        <button onclick={() => addNode("delayNode")}>add delay</button>
       </div>
     </Panel>
     <Panel position="top-right">hello...</Panel>

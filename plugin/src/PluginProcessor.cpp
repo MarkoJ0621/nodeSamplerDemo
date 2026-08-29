@@ -156,8 +156,7 @@ namespace nodeSamplerWebview
         for (const auto metadata : midiMessages)
         {
             const auto message = metadata.getMessage();
-            if (!message.isNoteOn()
-                || message.getVelocity() <= 0)
+            if (!message.isNoteOn() || message.getVelocity() <= 0)
                 continue;
 
             for (int i = 0; i < static_cast<int>(nodes.size()); ++i)
@@ -345,7 +344,11 @@ namespace nodeSamplerWebview
         }
         else if (type == "midiTriggerNode")
         {
-            nodeObject = std::make_unique<AudioGraphIOProcessor>(AudioGraphIOProcessor::audioOutputNode);
+            nodeObject = std::make_unique<MidiTriggerNode>();
+        }
+        else if (type == "delayNode")
+        {
+            nodeObject = std::make_unique<DelayNode>();
         }
         auto control = nodeObject.get();
         juce::AudioProcessorGraph::Node::Ptr node = mainProcessor->addNode(std::move(nodeObject));
