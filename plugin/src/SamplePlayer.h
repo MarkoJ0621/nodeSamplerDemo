@@ -15,6 +15,16 @@ public:
         {
             loadSample(value.toString());
         }
+        if (paramID == "loop")
+        {
+            transportSource.setLooping((bool)value);
+            readerSource->setLooping((bool)value);
+            isLooping = (bool)value;
+        }
+        if (paramID == "playbackSpeed")
+        {
+            resampler.setResamplingRatio((double)value);
+        }
     }
     void triggerAction(const juce::String &actionID) override
     {
@@ -38,12 +48,17 @@ public:
 
             transportSource.setSource(newSource.get(), 0, nullptr, reader->sampleRate);
             readerSource = std::move(newSource); // must happen after setSource, so the transport already points elsewhere before we take ownership here
+            transportSource.setLooping(isLooping);
+            readerSource->setLooping(isLooping);
         }
     }
 
     void prepareToPlay(double sampleRate, int samplesPerBlock) override
     {
         transportSource.prepareToPlay(samplesPerBlock, sampleRate);
+
+        resampler.prepareToPlay(samplesPerBlock, sampleRate);
+        resampler.setResamplingRatio(0.5);
     }
 
     void releaseResources() override { transportSource.releaseResources(); }
@@ -51,7 +66,7 @@ public:
     void processBlock(juce::AudioBuffer<float> &buffer, juce::MidiBuffer &) override
     {
         juce::AudioSourceChannelInfo info(&buffer, 0, buffer.getNumSamples());
-        transportSource.getNextAudioBlock(info);
+        resampler.getNextAudioBlock(info);
     }
 
     void start() { transportSource.start(); }
@@ -61,6 +76,8 @@ public:
 
 private:
     juce::AudioFormatManager formatManager;
+    bool isLooping = false;
     std::unique_ptr<juce::AudioFormatReaderSource> readerSource;
     juce::AudioTransportSource transportSource;
+    juce::ResamplingAudioSource resampler{&transportSource, false, 2};
 };
