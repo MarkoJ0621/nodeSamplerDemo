@@ -35,6 +35,14 @@
         console.log(value);
     }
 
+    function mixChange(event: Event) {
+        const value = Number((event.target as HTMLInputElement).value);
+        updateNodeData(id, { gain: value });
+        const adjustMix = Juce.getNativeFunction("setParameter");
+        adjustMix(value, id, "mix");
+        console.log(value);
+    }
+
     function delayToggle() {
         samplesFlag = !samplesFlag;
         const toggleSamples = Juce.getNativeFunction("setParameter");
@@ -44,7 +52,8 @@
 
 <div class="gain-slider-node">
     <div>
-        <label for="text">Gain!</label>
+        <label for="text">delay!</label>
+        <div>time</div>
         <input
             type="range"
             id="time"
@@ -53,16 +62,17 @@
             step="1"
             class="nodrag"
             value={data.delayTime ?? 0}
+            disabled={samplesFlag}
             oninput={timeChange}
         />
+        <div>feedback</div>
         <input
             type="range"
             id="feedback"
             min="0"
-            max="100"
-            step="1"
+            max="1"
+            step="0.01"
             class="nodrag"
-            disabled={samplesFlag}
             value={data.feedback ?? 0}
             oninput={feedbackChange}
         />
@@ -81,6 +91,17 @@
             class="nodrag"
             disabled={!samplesFlag}
             oninput={timeChange}
+        />
+        <div>mix</div>
+        <input
+            type="range"
+            id="mix"
+            min="0"
+            max="1"
+            step="0.01"
+            class="nodrag"
+            value={data.mix ?? 0}
+            oninput={mixChange}
         />
         <Handle type="source" position={Position.Bottom} />
         <Handle type="target" position={Position.Top} id="input" />

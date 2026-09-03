@@ -16,16 +16,26 @@ public:
         if (paramID == "samplesToggle")
         {
             samplesToggle = (bool)value;
-            updateBaseDelay(); // reinterpret the same raw slider value under the new unit
+            updateBaseDelay();
+            updateModulationDepth();
         }
         else if (paramID == "time")
         {
             lastTimeValue = (float)value;
             updateBaseDelay();
         }
-        else if (paramID == "modDepth")
+        else if (paramID == "modulationDepth")
         {
-            modDepthSamples = (float)value; // depth expressed directly in samples
+            lastModDepthValue = (float)value;
+            updateModulationDepth();
+        }
+        else if (paramID == "feedback")
+        {
+            feedbackAmt = juce::jlimit(0.0f, 0.999f, (float)value);
+        }
+        else if (paramID == "mix")
+        {
+            mixAmt = juce::jlimit(0.0f, 1.0f, (float)value);
         }
     }
 
@@ -33,8 +43,7 @@ public:
     {
         sampleRate = sr;
 
-        // must happen BEFORE prepare() — this is what was missing
-        delayLine.setMaximumDelayInSamples((int)(2.0 * sampleRate)); // supports up to 2s of delay
+        delayLine.setMaximumDelayInSamples((int)(2.0 * sampleRate));
 
         juce::dsp::ProcessSpec spec{sampleRate, (juce::uint32)samplesPerBlock, 2};
         delayLine.prepare(spec);
@@ -46,7 +55,6 @@ public:
     {
         auto mainBuffer = getBusBuffer(buffer, true, 0);
         auto modBuffer = getBusBuffer(buffer, true, 1);
-
         bool hasModulation = modBuffer.getNumChannels() > 0 && modDepthSamples > 0.0f;
         const float *modData = hasModulation ? modBuffer.getReadPointer(0) : nullptr;
 
@@ -56,16 +64,21 @@ public:
         {
             if (hasModulation)
             {
-                float modulated = juce::jlimit(0.0f, maxDelay,
-                                               baseDelaySamples + modData[i] * modDepthSamples);
+                int modulated = juce::jlimit(0.0f, maxDelay,
+                                             baseDelaySamples + modData[i] * modDepthSamples);
+                std::cout << modulated << std::endl;
+
                 delayLine.setDelay(modulated);
             }
 
             for (int ch = 0; ch < mainBuffer.getNumChannels(); ++ch)
             {
                 auto *data = mainBuffer.getWritePointer(ch);
-                delayLine.pushSample(ch, data[i]);
-                data[i] = delayLine.popSample(ch);
+                const float input = data[i];
+                const float delayed = delayLine.popSample(ch);
+
+                data[i] = input + (delayed - input) * mixAmt;
+                delayLine.pushSample(ch, input + delayed * feedbackAmt);
             }
         }
     }
@@ -86,10 +99,22 @@ private:
         delayLine.setDelay(baseDelaySamples);
     }
 
+    void updateModulationDepth()
+    {
+        modDepthSamples = samplesToggle
+                              ? lastModDepthValue
+                              : (lastModDepthValue * (float)sampleRate) / 1000.0f;
+
+        modDepthSamples = juce::jmax(0.0f, modDepthSamples);
+    }
+
     bool samplesToggle = false;
     float lastTimeValue = 0.0f;
+    float lastModDepthValue = 0.0f;
     float baseDelaySamples = 0.0f;
     float modDepthSamples = 0.0f;
+    float mixAmt = 0.0f;
     double sampleRate = 44100.0;
+    float feedbackAmt = 0.0f;
     juce::dsp::DelayLine<float> delayLine;
 };
