@@ -52,3 +52,14 @@ target_compile_definitions(NodeSampler
 
 # 5. Generate JUCE headers last
 juce_generate_juce_header(NodeSampler)
+
+file(GLOB_RECURSE PLUGIN_UI_ASSETS CONFIGURE_DEPENDS
+    "${CMAKE_CURRENT_SOURCE_DIR}/plugin/ui/public/*"
+)
+
+juce_add_binary_data(PluginUIData
+    NAMESPACE PluginUIData
+    SOURCES ${PLUGIN_UI_ASSETS}
+)
+
+target_link_libraries(NodeSampler PRIVATE PluginUIData)

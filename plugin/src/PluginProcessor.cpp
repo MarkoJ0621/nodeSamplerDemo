@@ -109,12 +109,12 @@ namespace nodeSamplerWebview
         // Use this method as the place to do any pre-playback
         // initialisation that you need..
         juce::ignoreUnused(sampleRate, samplesPerBlock);
+        initialiseGraph();
         mainProcessor->setPlayConfigDetails(getMainBusNumInputChannels(),
                                             getMainBusNumOutputChannels(),
                                             sampleRate,
                                             samplesPerBlock);
         mainProcessor->prepareToPlay(sampleRate, samplesPerBlock);
-        initialiseGraph();
     }
 
     void AudioPluginAudioProcessor::releaseResources()
@@ -181,6 +181,7 @@ namespace nodeSamplerWebview
     void AudioPluginAudioProcessor::initialiseGraph()
     {
         mainProcessor->clear();
+        nodes.clear();
         audioInputNode = mainProcessor->addNode(std::make_unique<AudioGraphIOProcessor>(AudioGraphIOProcessor::audioInputNode));
         audioOutputNode = mainProcessor->addNode(std::make_unique<AudioGraphIOProcessor>(AudioGraphIOProcessor::audioOutputNode));
         auto playerNode = std::make_unique<SamplePlayer>();

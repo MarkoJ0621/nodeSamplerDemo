@@ -1,5 +1,6 @@
 #include "PluginProcessor.h"
 #include "PluginEditor.h"
+#include "BinaryData.h"
 #include <unordered_set>
 
 //==============================================================================
@@ -145,21 +146,28 @@ namespace nodeSamplerWebview
     using Resource = juce::WebBrowserComponent::Resource;
     std::optional<Resource> AudioPluginAudioProcessorEditor::getResource(const juce::String &url)
     {
-#ifdef RESOURCE_FILE_ROOT_PATH
-        static const auto resourceFileRoot = juce::File(RESOURCE_FILE_ROOT_PATH);
-#else
-        // Fallback: assume the current working directory is the project root
-        // and locate `plugin/ui/public` relative to it. This is useful when
-        // running from an IDE or during development.
-        static const auto resourceFileRoot = juce::File::getCurrentWorkingDirectory().getChildFile("plugin/ui/public");
-        std::cout << resourceFileRoot.getFullPathName() << std::endl;
-#endif
-        const auto resourceToRetrieve = url == "/" ? "index.html" : url.fromFirstOccurrenceOf("/", false, false);
-        const auto resource = resourceFileRoot.getChildFile(resourceToRetrieve).createInputStream();
-        if (resource)
+        const auto resourceToRetrieve = url == "/" ? juce::String("index.html") : url.fromFirstOccurrenceOf("/", false, false);
+        const auto resourceFilename = resourceToRetrieve.fromLastOccurrenceOf("/", false, false);
+
+        for (int i = 0; i < PluginUIData::namedResourceListSize; ++i)
         {
+            const auto *symbolName = PluginUIData::namedResourceList[i];
+            const auto *originalFilename = PluginUIData::getNamedResourceOriginalFilename(symbolName);
+
+            if (originalFilename == nullptr || resourceFilename != originalFilename)
+                continue;
+
+            int dataSizeInBytes = 0;
+            const auto *data = PluginUIData::getNamedResource(symbolName, dataSizeInBytes);
+
+            if (data == nullptr)
+                return std::nullopt;
+
+            const auto *bytes = reinterpret_cast<const std::byte *>(data);
             const auto extension = resourceToRetrieve.fromLastOccurrenceOf(".", false, false);
-            return Resource{streamToVector(*resource), getMimeForExtension(extension)};
+            return juce::WebBrowserComponent::Resource{
+                std::vector<std::byte>(bytes, bytes + dataSizeInBytes),
+                getMimeForExtension(extension)};
         }
         return std::nullopt;
     }
