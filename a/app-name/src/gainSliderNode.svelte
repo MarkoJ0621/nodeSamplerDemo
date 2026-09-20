@@ -28,7 +28,7 @@
             min="-60"
             max="0"
             step="0.01"
-            class="nodrag"
+            class="nodrag slider"
             value={data.displayGain ?? data.gain ?? 0}
             oninput={handleGainChange}
         />

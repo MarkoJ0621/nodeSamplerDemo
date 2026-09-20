@@ -36,14 +36,17 @@
 <div class="gain-slider-node">
     <div>
         <label for="text">File!</label>
-        <!-- <input type="file" id="file" class="nodrag" oninput={handleFile} /> -->
+        <br />
         <button onclick={() => Juce.getNativeFunction("chooseFile")(id)}
-            >hi</button
+            >Load File</button
         >
+        <br />
 
         <button onclick={() => Juce.getNativeFunction("start")(id)}>Play</button
         >
         <button onclick={() => Juce.getNativeFunction("stop")(id)}>stop</button>
+        <br />
+
         <input type="checkbox" id="loop" oninput={handleLoop} />
         <label for="loop">loop</label>
         <div>playback speed</div>
@@ -53,7 +56,7 @@
             min="0"
             max="2"
             step="0.01"
-            class="nodrag"
+            class="nodrag slider"
             oninput={handlePlaybackSpeed}
         />
         <Handle type="source" position={Position.Bottom} />

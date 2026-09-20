@@ -10,6 +10,7 @@
     type Edge,
     type OnDelete,
   } from "@xyflow/svelte";
+  import Knob from "./knob.svelte";
   import * as Juce from "./js/juce/index.js";
 
   import gainSliderNode from "./gainSliderNode.svelte";
