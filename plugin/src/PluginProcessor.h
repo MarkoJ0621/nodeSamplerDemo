@@ -10,6 +10,7 @@
 #include "LFONode.h"
 #include "MidiTriggerNode.h"
 #include "DelayNode.h"
+#include <atomic>
 #include <vector>
 
 using AudioGraphIOProcessor = juce::AudioProcessorGraph::AudioGraphIOProcessor;
@@ -95,5 +96,7 @@ namespace nodeSamplerWebview
         SamplePlayer *samplePlayer = nullptr;
         GainControl *gainControl = nullptr;
         std::vector<juce::AudioProcessorGraph::Node::Ptr> nodes;
+        std::atomic<bool> hasLoggedAudioConnection{false};
+        std::atomic<bool> hasLoggedAudioCallback{false};
     };
 }

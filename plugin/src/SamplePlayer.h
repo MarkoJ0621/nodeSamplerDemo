@@ -18,7 +18,8 @@ public:
         if (paramID == "loop")
         {
             transportSource.setLooping((bool)value);
-            readerSource->setLooping((bool)value);
+            if (readerSource != nullptr)
+                readerSource->setLooping((bool)value);
             isLooping = (bool)value;
         }
         if (paramID == "playbackSpeed")
@@ -50,7 +51,12 @@ public:
             readerSource = std::move(newSource); // must happen after setSource, so the transport already points elsewhere before we take ownership here
             transportSource.setLooping(isLooping);
             readerSource->setLooping(isLooping);
+            std::cout << "Loaded sample: " << file.getFullPathName() << '\n';
+            return;
         }
+
+        std::cerr << "Could not load audio file: " << file.getFullPathName()
+                  << '\n';
     }
 
     void prepareToPlay(double sampleRate, int samplesPerBlock) override
@@ -65,6 +71,10 @@ public:
 
     void processBlock(juce::AudioBuffer<float> &buffer, juce::MidiBuffer &) override
     {
+        buffer.clear();
+        if (readerSource == nullptr)
+            return;
+
         juce::AudioSourceChannelInfo info(&buffer, 0, buffer.getNumSamples());
         resampler.getNextAudioBlock(info);
     }

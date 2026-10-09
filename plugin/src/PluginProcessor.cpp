@@ -12,6 +12,7 @@ namespace nodeSamplerWebview
           mainProcessor(new juce::AudioProcessorGraph()),
           parameters(*this, nullptr, "PARAMETERS", createParameterLayout())
     {
+        std::cerr << "NodeSampler processor constructed\n" << std::flush;
         formatManager.registerBasicFormats();
     }
 
@@ -106,14 +107,17 @@ namespace nodeSamplerWebview
     //==============================================================================
     void AudioPluginAudioProcessor::prepareToPlay(double sampleRate, int samplesPerBlock)
     {
+        std::cerr << "NodeSampler prepareToPlay: "
+                  << sampleRate << " Hz, "
+                  << samplesPerBlock << " samples\n" << std::flush;
         // Use this method as the place to do any pre-playback
         // initialisation that you need..
         juce::ignoreUnused(sampleRate, samplesPerBlock);
-        initialiseGraph();
         mainProcessor->setPlayConfigDetails(getMainBusNumInputChannels(),
                                             getMainBusNumOutputChannels(),
                                             sampleRate,
                                             samplesPerBlock);
+        initialiseGraph();
         mainProcessor->prepareToPlay(sampleRate, samplesPerBlock);
     }
 
@@ -152,6 +156,20 @@ namespace nodeSamplerWebview
                                                  juce::MidiBuffer &midiMessages)
     {
         juce::ScopedNoDenormals noDenormals;
+
+        if (!hasLoggedAudioCallback.exchange(true))
+        {
+            std::cerr << "Audio callback reached NodeSampler processor\n"
+                      << std::flush;
+        }
+
+        if (!hasLoggedAudioConnection.exchange(true))
+        {
+            std::cerr << "Audio connected: processor callback is receiving "
+                      << buffer.getNumChannels() << " channels x "
+                      << buffer.getNumSamples() << " samples\n"
+                      << std::flush;
+        }
 
         for (const auto metadata : midiMessages)
         {
@@ -195,6 +213,17 @@ namespace nodeSamplerWebview
         nodes.push_back(audioOutputNode);
         nodes.push_back(samplerNode);
         nodes.push_back(gainNode);
+
+        for (int channel = 0; channel < 2; ++channel)
+        {
+            const juce::AudioProcessorGraph::Connection connection{
+                {samplerNode->nodeID, channel},
+                {audioOutputNode->nodeID, channel}};
+
+            if (!mainProcessor->addConnection(connection))
+                std::cerr << "Could not connect the default sampler output on channel "
+                          << channel << '\n';
+        }
     }
 
     void AudioPluginAudioProcessor::connectAudioNodes(int source, int target, int channel)
@@ -211,15 +240,29 @@ namespace nodeSamplerWebview
         {
             for (int channel = 0; channel < 2; ++channel)
             {
-                mainProcessor->addConnection({{sourceNode->nodeID, channel},
-                                              {targetNode->nodeID, channel}});
+                const juce::AudioProcessorGraph::Connection connection{
+                    {sourceNode->nodeID, channel},
+                    {targetNode->nodeID, channel}};
+                if (mainProcessor->isConnected(connection))
+                    continue;
+
+                if (!mainProcessor->addConnection(connection))
+                    std::cerr << "Could not connect audio nodes " << source
+                              << " -> " << target << " on channel " << channel
+                              << '\n';
             }
         }
 
         if (channel == 2)
         {
-            mainProcessor->addConnection({{sourceNode->nodeID, 0},
-                                          {targetNode->nodeID, channel}});
+            const juce::AudioProcessorGraph::Connection connection{
+                {sourceNode->nodeID, 0}, {targetNode->nodeID, channel}};
+            if (mainProcessor->isConnected(connection))
+                return;
+
+            if (!mainProcessor->addConnection(connection))
+                std::cerr << "Could not connect modulation " << source
+                          << " -> " << target << '\n';
             return;
         }
     }

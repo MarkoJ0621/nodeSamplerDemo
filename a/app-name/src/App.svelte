@@ -25,7 +25,13 @@
   import { untrack } from "svelte";
   import modulationEdge from "./modulationEdge.svelte";
 
-  let edges = $state.raw<Edge[]>([]);
+  let edges = $state.raw<Edge[]>([
+    {
+      id: "sampler-output",
+      source: "3",
+      target: "2",
+    },
+  ]);
 
   const nodeTypes = {
     gainSliderNode,
