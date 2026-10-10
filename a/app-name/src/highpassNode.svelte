@@ -27,12 +27,18 @@
             min="100"
             max="20000"
             step="0.01"
-            class="nodrag"
-            value={data.displayGain ?? data.gain ?? 0}
+            class="nodrag slider"
+            value={data.cutoff ?? 100}
             oninput={handleCutoffChange}
         />
+        <span>{Number(data.cutoff ?? 100).toFixed(0)} Hz</span>
         <Handle type="source" position={Position.Bottom} />
         <Handle type="target" position={Position.Top} id="input" />
-        <Handle type="target" position={Position.Right} id="modulation" />
+        <Handle
+            type="target"
+            position={Position.Right}
+            id="modulation"
+            class="modulation-handle"
+        />
     </div>
 </div>

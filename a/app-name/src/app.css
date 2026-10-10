@@ -9,6 +9,31 @@ button {
   border: 1px solid black;
   border-radius: 0;
   margin: 5px;
+  cursor: pointer;
+  transition: background-color 80ms ease, color 80ms ease, transform 80ms ease;
+}
+
+button:hover {
+  background-color: #f0f0f0;
+}
+
+button:active,
+button[aria-pressed="true"] {
+  background-color: black;
+  color: white;
+  transform: translateY(1px);
+}
+
+.svelte-flow__handle.modulation-handle {
+  cursor: default;
+}
+
+.svelte-flow.connecting .svelte-flow__handle.modulation-handle {
+  cursor: not-allowed;
+}
+
+.svelte-flow.connecting .svelte-flow__handle.modulation-handle.valid {
+  cursor: crosshair;
 }
 
 .slider {

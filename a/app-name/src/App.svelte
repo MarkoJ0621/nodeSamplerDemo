@@ -8,6 +8,7 @@
     addEdge,
     type Node,
     type Edge,
+    type Connection,
     type OnDelete,
   } from "@xyflow/svelte";
   import Knob from "./knob.svelte";
@@ -78,10 +79,19 @@
   let audioSourceConnected = false;
   let LFOConnected = false;
   //listener function for when a connection is made
+  function isAllowedConnection(connection: Connection) {
+    if (connection.targetHandle !== "modulation") return true;
+    return nodes.find((node) => node.id === connection.source)?.type === "lfoNode";
+  }
+
   function handleConnect(connection: Connection) {
     console.log("Connection made:", connection);
     const addConnection = Juce.getNativeFunction("addConnection");
     if (connection.targetHandle === "modulation") {
+      if (!isAllowedConnection(connection)) {
+        console.warn("Only LFO nodes can connect to modulation inputs");
+        return;
+      }
       console.log("modulation connection made");
       addConnection(connection.source, connection.target, 2);
     } else {
@@ -237,21 +247,22 @@
     bind:edges
     {nodeTypes}
     {edgeTypes}
+    isValidConnection={isAllowedConnection}
     fitView
     onconnect={handleConnect}
     ondelete={handleDelete}
   >
     <Panel position="top-left">
       <div style="display:flex;gap:8px;align-items:center;">
-        <button onclick={() => addNode("gainNode")}>Add Gain</button>
-        <button onclick={() => addNode("lfoNode")}>Add LFO</button>
-        <button onclick={() => addNode("samplerNode")}>Add Audio File</button>
-        <button onclick={() => addNode("lowpassNode")}>add lowpass</button>
-        <button onclick={() => addNode("highpassNode")}>add highpass</button>
-        <button onclick={() => addNode("midiTriggerNode")}
+        <button class="nodrag" onclick={() => addNode("gainNode")}>Add Gain</button>
+        <button class="nodrag" onclick={() => addNode("lfoNode")}>Add LFO</button>
+        <button class="nodrag" onclick={() => addNode("samplerNode")}>Add Audio File</button>
+        <button class="nodrag" onclick={() => addNode("lowpassNode")}>add lowpass</button>
+        <button class="nodrag" onclick={() => addNode("highpassNode")}>add highpass</button>
+        <button class="nodrag" onclick={() => addNode("midiTriggerNode")}
           >add MIDI trigger</button
         >
-        <button onclick={() => addNode("delayNode")}>add delay</button>
+        <button class="nodrag" onclick={() => addNode("delayNode")}>add delay</button>
       </div>
     </Panel>
     <Panel position="top-right">hello...</Panel>

@@ -21,8 +21,8 @@ public:
 
     MidiTriggerNode()
         : ProcessorBase(BusesProperties()
-                            .withInput("Input", juce::AudioChannelSet::stereo())
-                            .withInput("MIDI Input", juce::AudioChannelSet::disabled(), true))
+                            .withInput("MIDI Input", juce::AudioChannelSet::disabled(), true)
+                            .withOutput("Output", juce::AudioChannelSet::stereo(), true))
     {
     }
     const juce::String getName() const override { return "MidiTrigger"; }

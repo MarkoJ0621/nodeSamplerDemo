@@ -32,8 +32,14 @@
             value={data.displayGain ?? data.gain ?? 0}
             oninput={handleGainChange}
         />
+        <span>{Number(data.gain ?? 0).toFixed(2)} dB</span>
         <Handle type="source" position={Position.Bottom} />
         <Handle type="target" position={Position.Top} id="input" />
-        <Handle type="target" position={Position.Right} id="modulation" />
+        <Handle
+            type="target"
+            position={Position.Right}
+            id="modulation"
+            class="modulation-handle"
+        />
     </div>
 </div>

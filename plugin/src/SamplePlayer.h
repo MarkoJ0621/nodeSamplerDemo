@@ -1,11 +1,15 @@
 #include "AudioProcessor.h"
 #include <juce_audio_processors/juce_audio_processors.h>
 #include <juce_audio_formats/juce_audio_formats.h>
+#include <atomic>
 class SamplePlayer : public ProcessorBase
 {
 public:
     SamplePlayer()
-        : ProcessorBase(BusesProperties().withOutput("Output", juce::AudioChannelSet::stereo(), true))
+        : ProcessorBase(BusesProperties()
+                            .withInput("Input", juce::AudioChannelSet::stereo())
+                            .withInput("Modulation", juce::AudioChannelSet::mono())
+                            .withOutput("Output", juce::AudioChannelSet::stereo(), true))
     {
         formatManager.registerBasicFormats();
     }
@@ -24,7 +28,11 @@ public:
         }
         if (paramID == "playbackSpeed")
         {
-            resampler.setResamplingRatio((double)value);
+            playbackSpeed.store(juce::jlimit(0.01f, 4.0f, (float)value));
+        }
+        if (paramID == "modulationDepth")
+        {
+            modDepth.store((float)value);
         }
     }
     void triggerAction(const juce::String &actionID) override
@@ -62,9 +70,8 @@ public:
     void prepareToPlay(double sampleRate, int samplesPerBlock) override
     {
         transportSource.prepareToPlay(samplesPerBlock, sampleRate);
-
         resampler.prepareToPlay(samplesPerBlock, sampleRate);
-        resampler.setResamplingRatio(0.5);
+        resampler.setResamplingRatio(playbackSpeed.load());
     }
 
     void releaseResources() override { transportSource.releaseResources(); }
@@ -75,6 +82,15 @@ public:
         if (readerSource == nullptr)
             return;
 
+        const auto modBuffer = getBusBuffer(buffer, true, 1);
+        auto ratio = playbackSpeed.load();
+        if (modBuffer.getNumChannels() > 0 && modBuffer.getNumSamples() > 0)
+        {
+            const auto *modulation = modBuffer.getReadPointer(0);
+            ratio += modulation[modBuffer.getNumSamples() - 1] * modDepth.load();
+        }
+
+        resampler.setResamplingRatio(juce::jlimit(0.01f, 4.0f, ratio));
         juce::AudioSourceChannelInfo info(&buffer, 0, buffer.getNumSamples());
         resampler.getNextAudioBlock(info);
     }
@@ -90,4 +106,6 @@ private:
     std::unique_ptr<juce::AudioFormatReaderSource> readerSource;
     juce::AudioTransportSource transportSource;
     juce::ResamplingAudioSource resampler{&transportSource, false, 2};
+    std::atomic<float> playbackSpeed{1.0f};
+    std::atomic<float> modDepth{0.0f};
 };

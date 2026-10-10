@@ -35,7 +35,7 @@
             min="0"
             max="1"
             step="0.0001"
-            class="nodrag"
+            class="nodrag slider"
             value={frequencyToSlider(Number(data.cutoff ?? 1000))}
             oninput={(e) => {
                 const sliderVal = Number((e.target as HTMLInputElement).value);
@@ -44,8 +44,14 @@
                 Juce.getNativeFunction("setParameter")(freq, id, "frequency");
             }}
         />
+        <span>{Number(data.cutoff ?? 1000).toFixed(0)} Hz</span>
         <Handle type="source" position={Position.Bottom} />
         <Handle type="target" position={Position.Top} id="input" />
-        <Handle type="target" position={Position.Right} id="modulation" />
+        <Handle
+            type="target"
+            position={Position.Right}
+            id="modulation"
+            class="modulation-handle"
+        />
     </div>
 </div>

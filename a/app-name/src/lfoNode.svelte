@@ -32,23 +32,23 @@
             min="0.5"
             max="5"
             step="0.01"
-            class="nodrag"
+            class="nodrag slider"
             value={data.freq ?? 0}
             oninput={updateFreq}
         />
-        <label for="freq">Frequency</label>
+        <label for="freq">Frequency: {Number(data.freq ?? 0).toFixed(2)} Hz</label>
         <input
             type="range"
             id="amplitude"
             min="0"
             max="1"
             step="0.01"
-            class="nodrag"
+            class="nodrag slider"
             value={data.amplitude ?? 0}
             oninput={updateAmplitude}
         />
 
-        <label for="amplitude">Amplitude</label>
+        <label for="amplitude">Amplitude: {Number(data.amplitude ?? 0).toFixed(2)}</label>
         <Handle type="source" position={Position.Bottom} />
     </div>
 </div>

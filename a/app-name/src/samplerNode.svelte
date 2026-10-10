@@ -37,14 +37,14 @@
     <div>
         <label for="text">File!</label>
         <br />
-        <button onclick={() => Juce.getNativeFunction("chooseFile")(id)}
+        <button class="nodrag" onclick={() => Juce.getNativeFunction("chooseFile")(id)}
             >Load File</button
         >
         <br />
 
-        <button onclick={() => Juce.getNativeFunction("start")(id)}>Play</button
+        <button class="nodrag" onclick={() => Juce.getNativeFunction("start")(id)}>Play</button
         >
-        <button onclick={() => Juce.getNativeFunction("stop")(id)}>stop</button>
+        <button class="nodrag" onclick={() => Juce.getNativeFunction("stop")(id)}>stop</button>
         <br />
 
         <input type="checkbox" id="loop" oninput={handleLoop} />
@@ -53,20 +53,21 @@
         <input
             type="range"
             id="playbackSpeed"
-            min="0"
+            min="0.5"
             max="2"
             step="0.01"
             class="nodrag slider"
             oninput={handlePlaybackSpeed}
+            value={data.playbackSpeed ?? 1}
         />
+        <span>{Number(data.playbackSpeed ?? 1).toFixed(2)}x</span>
         <Handle type="source" position={Position.Bottom} />
         <Handle type="target" position={Position.Top} id="input" />
-        <Handle type="target" position={Position.Right} id="modulation" />
         <Handle
             type="target"
             position={Position.Right}
-            id="playbackSpeed"
-            style="top: 20px"
+            id="modulation"
+            class="modulation-handle"
         />
     </div>
 </div>

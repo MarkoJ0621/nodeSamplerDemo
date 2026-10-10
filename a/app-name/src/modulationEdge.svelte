@@ -21,11 +21,9 @@
 
     const edges = useEdges();
 
-    function handleDepthChange(event: Event) {
-        const value = Number((event.target as HTMLInputElement).value);
+    function handleDepthChange(value: number) {
         const adjustDepth = Juce.getNativeFunction("setParameter");
         adjustDepth(value, target, "modulationDepth");
-        console.log(target);
     }
     let modDepth = $state(0);
 </script>
@@ -45,8 +43,10 @@
         bind:value={modDepth}
         min={-5}
         max={5}
+        step={0.01}
         label="mod depth"
         size={40}
+        oninput={handleDepthChange}
         onchange={(v) => console.log("committed", v)}
     />
 </EdgeLabel>

@@ -255,6 +255,13 @@ namespace nodeSamplerWebview
 
         if (channel == 2)
         {
+            if (dynamic_cast<LfoNode *>(sourceNode->getProcessor()) == nullptr)
+            {
+                std::cerr << "Rejected modulation connection: source " << source
+                          << " is not an LFO\n";
+                return;
+            }
+
             const juce::AudioProcessorGraph::Connection connection{
                 {sourceNode->nodeID, 0}, {targetNode->nodeID, channel}};
             if (mainProcessor->isConnected(connection))
@@ -425,13 +432,13 @@ namespace nodeSamplerWebview
 
             for (auto &c : connections)
             {
-                if (c.destination.nodeID == current && visited.find(c.source.nodeID.uid) == visited.end())
+                if (c.source.nodeID == current && visited.find(c.destination.nodeID.uid) == visited.end())
                 {
-                    visited.insert(c.source.nodeID.uid);
-                    toVisit.push_back(c.source.nodeID);
+                    visited.insert(c.destination.nodeID.uid);
+                    toVisit.push_back(c.destination.nodeID);
 
-                    if (auto sourceNode = mainProcessor->getNodeForId(c.source.nodeID))
-                        if (auto *processor = dynamic_cast<ProcessorBase *>(sourceNode->getProcessor()))
+                    if (auto destinationNode = mainProcessor->getNodeForId(c.destination.nodeID))
+                        if (auto *processor = dynamic_cast<SamplePlayer *>(destinationNode->getProcessor()))
                             processor->triggerAction("start");
                 }
             }

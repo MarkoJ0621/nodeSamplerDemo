@@ -25,12 +25,12 @@
 
 <div class="gain-slider-node">
     <div>
-        <label for="text">MIDI trigger</label>
+        <label for="midi-note">MIDI trigger</label>
         <input
-            type="range"
-            id="gain"
+            type="number"
+            id="midi-note"
             min="0"
-            max="60"
+            max="127"
             step="1"
             class="nodrag"
             oninput={handleNoteChange}
@@ -38,6 +38,6 @@
         />
         <button class="nodrag" onclick={triggerNote}>trigger</button>
         <div>current note selected: {data.note}</div>
-        <Handle type="target" position={Position.Top} id="input" />
+        <Handle type="source" position={Position.Bottom} />
     </div>
 </div>

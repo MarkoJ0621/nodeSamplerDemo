@@ -21,7 +21,7 @@
 
     function timeChange(event: Event) {
         const value = Number((event.target as HTMLInputElement).value);
-        updateNodeData(id, { gain: value });
+        updateNodeData(id, { delayTime: value });
         const adjustTime = Juce.getNativeFunction("setParameter");
         adjustTime(value, id, "time");
         console.log(value);
@@ -29,7 +29,7 @@
 
     function feedbackChange(event: Event) {
         const value = Number((event.target as HTMLInputElement).value);
-        updateNodeData(id, { gain: value });
+        updateNodeData(id, { feedback: value });
         const adjustFeedback = Juce.getNativeFunction("setParameter");
         adjustFeedback(value, id, "feedback");
         console.log(value);
@@ -37,7 +37,7 @@
 
     function mixChange(event: Event) {
         const value = Number((event.target as HTMLInputElement).value);
-        updateNodeData(id, { gain: value });
+        updateNodeData(id, { mix: value });
         const adjustMix = Juce.getNativeFunction("setParameter");
         adjustMix(value, id, "mix");
         console.log(value);
@@ -60,11 +60,12 @@
             min="1"
             max="2000"
             step="1"
-            class="nodrag"
+            class="nodrag slider"
             value={data.delayTime ?? 0}
             disabled={samplesFlag}
             oninput={timeChange}
         />
+        <span>{Number(data.delayTime ?? 1).toFixed(0)} ms</span>
         <div>feedback</div>
         <input
             type="range"
@@ -72,10 +73,11 @@
             min="0"
             max="1"
             step="0.01"
-            class="nodrag"
+            class="nodrag slider"
             value={data.feedback ?? 0}
             oninput={feedbackChange}
         />
+        <span>{Number(data.feedback ?? 0).toFixed(2)}</span>
         <button
             onclick={delayToggle}
             id="samplesInput"
@@ -88,7 +90,7 @@
             id="samplesDelay"
             min="0"
             step="0"
-            class="nodrag"
+            class="nodrag slider"
             disabled={!samplesFlag}
             oninput={timeChange}
         />
@@ -99,12 +101,18 @@
             min="0"
             max="1"
             step="0.01"
-            class="nodrag"
+            class="nodrag slider"
             value={data.mix ?? 0}
             oninput={mixChange}
         />
+        <span>{Number(data.mix ?? 0).toFixed(2)}</span>
         <Handle type="source" position={Position.Bottom} />
         <Handle type="target" position={Position.Top} id="input" />
-        <Handle type="target" position={Position.Right} id="modulation" />
+        <Handle
+            type="target"
+            position={Position.Right}
+            id="modulation"
+            class="modulation-handle"
+        />
     </div>
 </div>
