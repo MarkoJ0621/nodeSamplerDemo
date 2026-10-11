@@ -20,9 +20,10 @@ dependencies, builds the web UI, and builds the plugin:
 ./build.sh
 ```
 
-The script requires `git`, CMake 3.22 or newer, Node.js, npm, and a working
-C++20 toolchain. On macOS, install the Xcode Command Line Tools if they are
-not already installed.
+The script checks for `git`, CMake 3.22 or newer, Node.js, npm, and a working
+C++20 toolchain. If dependencies are missing, it installs them through
+Homebrew on macOS or `apt` on Debian/Ubuntu Linux. On macOS, install the Xcode
+Command Line Tools if they are not already installed.
 
 Clone the repository and enter its directory:
 
