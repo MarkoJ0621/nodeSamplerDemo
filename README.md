@@ -8,9 +8,21 @@ NodeSampler is a Max-inspired, node-based audio plugin for flexible sampling. Lo
 - A C++20 compiler
 - Node.js and npm (or pnpm)
 - JUCE 8.0.10
+- Vite
 
 This plugin is untested on Windows or Linux, however it definetely runs on MacOS
 ## Build
+
+The repository includes a build script that downloads JUCE, installs the UI
+dependencies, builds the web UI, and builds the plugin:
+
+```bash
+./build.sh
+```
+
+The script requires `git`, CMake 3.22 or newer, Node.js, npm, and a working
+C++20 toolchain. On macOS, install the Xcode Command Line Tools if they are
+not already installed.
 
 Clone the repository and enter its directory:
 
@@ -64,4 +76,3 @@ xattr -dr com.apple.quarantine ~/Library/Audio/Plug-Ins/Components/NodeSampler.c
 ```
 
 Restart the host application after installing or changing a plugin.
-
