@@ -47,6 +47,5 @@
         label="mod depth"
         size={40}
         oninput={handleDepthChange}
-        onchange={(v) => console.log("committed", v)}
     />
 </EdgeLabel>

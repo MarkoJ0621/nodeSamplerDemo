@@ -9,7 +9,6 @@ public:
     {
         if (paramID == "gain")
         {
-            std::cout << "gain adjusted to " << int(value) << std::endl;
             adjustGain(value);
         }
         if (paramID == "modulationDepth")

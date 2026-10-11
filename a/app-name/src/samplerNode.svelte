@@ -35,16 +35,23 @@
 
 <div class="gain-slider-node">
     <div>
-        <label for="text">File!</label>
+        <label for="text">File Loader</label>
         <br />
-        <button class="nodrag" onclick={() => Juce.getNativeFunction("chooseFile")(id)}
+        <button
+            class="nodrag"
+            onclick={() => Juce.getNativeFunction("chooseFile")(id)}
             >Load File</button
         >
         <br />
 
-        <button class="nodrag" onclick={() => Juce.getNativeFunction("start")(id)}>Play</button
+        <button
+            class="nodrag"
+            onclick={() => Juce.getNativeFunction("start")(id)}>Play</button
         >
-        <button class="nodrag" onclick={() => Juce.getNativeFunction("stop")(id)}>stop</button>
+        <button
+            class="nodrag"
+            onclick={() => Juce.getNativeFunction("stop")(id)}>stop</button
+        >
         <br />
 
         <input type="checkbox" id="loop" oninput={handleLoop} />

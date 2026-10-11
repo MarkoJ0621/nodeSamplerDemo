@@ -15,7 +15,6 @@
     //     updateNodeData(id, { gain: value });
     //     const adjustGain = Juce.getNativeFunction("setParameter");
     //     adjustGain(value, id, "gain");
-    //     console.log(id);
     // }
     let samplesFlag = $state(false);
 
@@ -24,7 +23,13 @@
         updateNodeData(id, { delayTime: value });
         const adjustTime = Juce.getNativeFunction("setParameter");
         adjustTime(value, id, "time");
-        console.log(value);
+    }
+
+    function sampleDelayChange(event: Event) {
+        const value = Number((event.target as HTMLInputElement).value);
+        updateNodeData(id, { sampleDelay: value });
+        const adjustTime = Juce.getNativeFunction("setParameter");
+        adjustTime(value, id, "time");
     }
 
     function feedbackChange(event: Event) {
@@ -32,7 +37,6 @@
         updateNodeData(id, { feedback: value });
         const adjustFeedback = Juce.getNativeFunction("setParameter");
         adjustFeedback(value, id, "feedback");
-        console.log(value);
     }
 
     function mixChange(event: Event) {
@@ -40,7 +44,6 @@
         updateNodeData(id, { mix: value });
         const adjustMix = Juce.getNativeFunction("setParameter");
         adjustMix(value, id, "mix");
-        console.log(value);
     }
 
     function delayToggle() {
@@ -77,7 +80,7 @@
             value={data.feedback ?? 0}
             oninput={feedbackChange}
         />
-        <span>{Number(data.feedback ?? 0).toFixed(2)}</span>
+        <div>{Number(data.feedback ?? 0).toFixed(2)}</div>
         <button
             onclick={delayToggle}
             id="samplesInput"
@@ -89,10 +92,11 @@
             type="number"
             id="samplesDelay"
             min="0"
-            step="0"
-            class="nodrag slider"
+            step="1"
+            class="nodrag"
+            value={data.sampleDelay ?? 0}
             disabled={!samplesFlag}
-            oninput={timeChange}
+            oninput={sampleDelayChange}
         />
         <div>mix</div>
         <input
@@ -116,3 +120,25 @@
         />
     </div>
 </div>
+
+<style>
+    #samplesDelay {
+        box-sizing: border-box;
+        max-width: 100%;
+    }
+
+    #time:disabled {
+        opacity: 0.35;
+        cursor: not-allowed;
+    }
+
+    #time:disabled::-webkit-slider-thumb {
+        background: #888;
+        cursor: not-allowed;
+    }
+
+    #time:disabled::-moz-range-thumb {
+        background: #888;
+        cursor: not-allowed;
+    }
+</style>

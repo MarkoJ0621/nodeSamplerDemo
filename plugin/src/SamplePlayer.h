@@ -59,7 +59,6 @@ public:
             readerSource = std::move(newSource); // must happen after setSource, so the transport already points elsewhere before we take ownership here
             transportSource.setLooping(isLooping);
             readerSource->setLooping(isLooping);
-            std::cout << "Loaded sample: " << file.getFullPathName() << '\n';
             return;
         }
 

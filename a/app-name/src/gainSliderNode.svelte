@@ -15,7 +15,6 @@
         updateNodeData(id, { gain: value });
         const adjustGain = Juce.getNativeFunction("setParameter");
         adjustGain(value, id, "gain");
-        console.log(id);
     }
 </script>
 

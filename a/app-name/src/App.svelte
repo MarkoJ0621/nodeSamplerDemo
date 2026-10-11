@@ -29,13 +29,13 @@
   let edges = $state.raw<Edge[]>([
     {
       id: "sampler-output",
-      source: "3",
-      target: "2",
+      source: "2",
+      target: "1",
     },
   ]);
 
   const nodeTypes = {
-    gainSliderNode,
+    gainNode: gainSliderNode,
     lfoNode,
     samplerNode,
     lowpassNode,
@@ -47,28 +47,23 @@
   const edgeTypes = {
     modulationEdge,
   };
-  let nodeCount = 5;
+  let nodeCount = 4;
   let nodes = $state.raw<Node[]>([
     {
       id: "1",
-      data: { label: "audio source" },
-      position: { x: 0, y: 0 },
-    },
-    {
-      id: "2",
       data: { label: "audio out" },
       position: { x: 150, y: 150 },
     },
     {
-      id: "3",
+      id: "2",
       type: "samplerNode",
       data: { label: "audio file node" },
       position: { x: 0, y: 300 },
       class: "svelte-flow__node-default",
     },
     {
-      id: "4",
-      type: "gainSliderNode",
+      id: "3",
+      type: "gainNode",
       data: { label: "gain node" },
       position: { x: 300, y: 0 },
       class: "svelte-flow__node-default",
@@ -76,32 +71,28 @@
   ]);
 
   let gainSliderConnected = false;
-  let audioSourceConnected = false;
   let LFOConnected = false;
   //listener function for when a connection is made
   function isAllowedConnection(connection: Connection) {
     if (connection.targetHandle !== "modulation") return true;
-    return nodes.find((node) => node.id === connection.source)?.type === "lfoNode";
+    return (
+      nodes.find((node) => node.id === connection.source)?.type === "lfoNode"
+    );
   }
 
   function handleConnect(connection: Connection) {
-    console.log("Connection made:", connection);
     const addConnection = Juce.getNativeFunction("addConnection");
     if (connection.targetHandle === "modulation") {
       if (!isAllowedConnection(connection)) {
-        console.warn("Only LFO nodes can connect to modulation inputs");
         return;
       }
-      console.log("modulation connection made");
       addConnection(connection.source, connection.target, 2);
     } else {
       addConnection(connection.source, connection.target, 0);
     }
     const type =
       connection.targetHandle === "modulation" ? "modulationEdge" : undefined;
-    console.log(type);
     edges = addEdge({ ...connection, type }, edges);
-    console.log(edges);
   }
   $effect(() => {
     const needsFix = edges.some(
@@ -142,8 +133,6 @@
 
       // keep nodeCount in sync with current nodes length
       nodeCount = nodes.length + 1;
-      console.log(nodes);
-      console.log(nodeCount);
       for (let i = 0; i < deletedNodes.length; i = i + 1) {
         const deleteNode = Juce.getNativeFunction("deleteNode");
         deleteNode(deletedNodes[i].id);
@@ -159,52 +148,37 @@
     }
   };
 
-  let gainValue = $derived(nodes.find((n) => n.id === "3")?.data.gain);
+  let gainValue = $derived(nodes.find((n) => n.type === "gainNode")?.data.gain);
   $effect(() => {
-    console.log(
-      "audio:",
-      audioSourceConnected,
-      "gain:",
-      gainSliderConnected,
-      "value:",
-      gainValue,
-    );
-    if (!audioSourceConnected) {
-      handleGainChange(0);
-    } else if (gainValue !== undefined && gainSliderConnected) {
-      console.log("here");
+    if (gainValue !== undefined && gainSliderConnected) {
       handleGainChange(gainValue as number);
     }
   });
-  let freqValue = $derived(nodes.find((n) => n.id === "4")?.data.freq);
+  let freqValue = $derived(nodes.find((n) => n.type === "lfoNode")?.data.freq);
   $effect(() => {
-    console.log("freq:", freqValue);
     if (LFOConnected) {
       handleFreqChange(freqValue as number);
     } else {
       handleFreqChange(0);
     }
   });
-  let ampValue = $derived(nodes.find((n) => n.id === "4")?.data.amplitude);
+  let ampValue = $derived(
+    nodes.find((n) => n.type === "lfoNode")?.data.amplitude,
+  );
   $effect(() => {
-    console.log("amp:", ampValue);
     if (LFOConnected) {
       handleAmpChange(ampValue as number);
     } else {
       handleAmpChange(-1);
-      console.log("here!");
     }
   });
   function handleGainChange(value: number) {
-    console.log("Gain changed to:", value);
     window.__JUCE__?.backend.emitEvent("gainChange", value);
   }
   function handleFreqChange(value: number) {
-    console.log("Freq changed to:", value);
     window.__JUCE__?.backend.emitEvent("freqChange", value);
   }
   function handleAmpChange(value: number) {
-    console.log("Amp changed to:", value);
     window.__JUCE__?.backend.emitEvent("ampChange", value);
   }
   // Add a node dynamically to the flow
@@ -254,18 +228,29 @@
   >
     <Panel position="top-left">
       <div style="display:flex;gap:8px;align-items:center;">
-        <button class="nodrag" onclick={() => addNode("gainNode")}>Add Gain</button>
-        <button class="nodrag" onclick={() => addNode("lfoNode")}>Add LFO</button>
-        <button class="nodrag" onclick={() => addNode("samplerNode")}>Add Audio File</button>
-        <button class="nodrag" onclick={() => addNode("lowpassNode")}>add lowpass</button>
-        <button class="nodrag" onclick={() => addNode("highpassNode")}>add highpass</button>
+        <button class="nodrag" onclick={() => addNode("gainNode")}
+          >Add Gain</button
+        >
+        <button class="nodrag" onclick={() => addNode("lfoNode")}
+          >Add LFO</button
+        >
+        <button class="nodrag" onclick={() => addNode("samplerNode")}
+          >Add Audio File</button
+        >
+        <button class="nodrag" onclick={() => addNode("lowpassNode")}
+          >add lowpass</button
+        >
+        <button class="nodrag" onclick={() => addNode("highpassNode")}
+          >add highpass</button
+        >
         <button class="nodrag" onclick={() => addNode("midiTriggerNode")}
           >add MIDI trigger</button
         >
-        <button class="nodrag" onclick={() => addNode("delayNode")}>add delay</button>
+        <button class="nodrag" onclick={() => addNode("delayNode")}
+          >add delay</button
+        >
       </div>
     </Panel>
-    <Panel position="top-right">hello...</Panel>
     <Controls />
     <Background />
     <MiniMap />

@@ -107,7 +107,6 @@ namespace nodeSamplerWebview
         completion("bye"); })
                       .withNativeFunction("newNode", [this](const juce::Array<juce::var> &args, juce::WebBrowserComponent::NativeFunctionCompletion completion)
                                           {
-                                            std::cout<<args[0].toString()<<std::endl;
         processorRef.newNode(args[0].toString());
         completion("bye"); })
                       .withNativeFunction("setParameter", [this](const juce::Array<juce::var> &args, juce::WebBrowserComponent::NativeFunctionCompletion completion)

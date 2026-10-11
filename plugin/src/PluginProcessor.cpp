@@ -209,7 +209,6 @@ namespace nodeSamplerWebview
         auto gainNodeObject = std::make_unique<GainControl>();
         gainControl = gainNodeObject.get();
         gainNode = mainProcessor->addNode(std::move(gainNodeObject));
-        nodes.push_back(audioInputNode);
         nodes.push_back(audioOutputNode);
         nodes.push_back(samplerNode);
         nodes.push_back(gainNode);
@@ -296,7 +295,6 @@ namespace nodeSamplerWebview
 
     void AudioPluginAudioProcessor::deleteNode(int id)
     {
-        std::cout << id << std::endl;
         mainProcessor->removeNode(nodes[id - 1]);
         nodes.erase(nodes.begin() + id - 1);
     }
@@ -354,29 +352,20 @@ namespace nodeSamplerWebview
 
     void AudioPluginAudioProcessor::newGainNode()
     {
-        std::cout << "new node!" << std::endl;
         auto gainNodeObject = std::make_unique<GainControl>();
         gainControl = gainNodeObject.get();
         gainNode = mainProcessor->addNode(std::move(gainNodeObject));
         nodes.push_back(gainNode);
-        for (int i = 0; i < nodes.size(); i++)
-        {
-            std::cout << nodes[i] << std::endl;
-        }
     }
     void AudioPluginAudioProcessor::newNode(const juce::String &type)
     {
         std::unique_ptr<juce::AudioProcessor> nodeObject;
-        std::cout << "new node!" << std::endl;
-        std::cout << type.toStdString() << std::endl;
         if (type == "gainNode")
         {
-            std::cout << "new gain node created" << std::endl;
             nodeObject = std::make_unique<GainControl>();
         }
         else if (type == "lowpassNode")
         {
-            std::cout << "here???" << std::endl;
             nodeObject = std::make_unique<LowpassNode>();
         }
         else if (type == "highpassNode")
@@ -385,12 +374,10 @@ namespace nodeSamplerWebview
         }
         else if (type == "samplerNode")
         {
-            std::cout << "new sampler node" << std::endl;
             nodeObject = std::make_unique<SamplePlayer>();
         }
         else if (type == "lfoNode")
         {
-            std::cout << "new sampler node" << std::endl;
             nodeObject = std::make_unique<LfoNode>();
         }
         else if (type == "midiTriggerNode")
@@ -404,10 +391,6 @@ namespace nodeSamplerWebview
         auto control = nodeObject.get();
         juce::AudioProcessorGraph::Node::Ptr node = mainProcessor->addNode(std::move(nodeObject));
         nodes.push_back(node);
-        for (int i = 0; i < nodes.size(); i++)
-        {
-            std::cout << nodes[i] << std::endl;
-        }
     }
 
     void AudioPluginAudioProcessor::triggerSamplersConnectedTo(int outputId)
@@ -446,7 +429,6 @@ namespace nodeSamplerWebview
     }
     void AudioPluginAudioProcessor::setParameter(float value, int id, const juce::String &paramID)
     {
-        std::cout << id << std::endl;
         if (id <= 0 || id > static_cast<int>(nodes.size()))
             return;
         auto node = nodes[id - 1];

@@ -15,7 +15,7 @@ public:
     {
         if (paramID == "samplesToggle")
         {
-            samplesToggle = (bool)value;
+            samplesToggle = value ? true : false;
             updateBaseDelay();
             updateModulationDepth();
         }
@@ -66,8 +66,6 @@ public:
             {
                 int modulated = juce::jlimit(0.0f, maxDelay,
                                              baseDelaySamples + modData[i] * modDepthSamples);
-                std::cout << modulated << std::endl;
-
                 delayLine.setDelay(modulated);
             }
 
@@ -101,11 +99,15 @@ private:
 
     void updateModulationDepth()
     {
-        modDepthSamples = samplesToggle
-                              ? lastModDepthValue
-                              : (lastModDepthValue * (float)sampleRate) / 1000.0f;
+        modDepthSamples = samplesToggle ? lastModDepthValue
+                                        : millisecondsToSamples(lastModDepthValue);
 
         modDepthSamples = juce::jmax(0.0f, modDepthSamples);
+    }
+
+    float millisecondsToSamples(float milliseconds) const
+    {
+        return milliseconds * static_cast<float>(sampleRate) / 1000.0f;
     }
 
     bool samplesToggle = false;

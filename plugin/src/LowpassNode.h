@@ -12,7 +12,6 @@ public:
 
     void setParameter(const juce::String &paramID, const juce::var &value) override
     {
-        std::cout << "are we here :((()))" << std::endl;
         if (paramID == "frequency")
             setFrequency((float)value);
         else if (paramID == "modulationDepth")

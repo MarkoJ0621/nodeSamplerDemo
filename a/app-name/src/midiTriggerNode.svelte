@@ -17,7 +17,6 @@
         setMidiTrigger(value, id, "setMidi");
     }
     function triggerNote() {
-        console.log("bang!");
         const trigger = Juce.getNativeFunction("triggerOutput");
         trigger(id);
     }

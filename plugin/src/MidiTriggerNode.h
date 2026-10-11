@@ -37,14 +37,6 @@ public:
         for (const auto metadata : midiMessages)
         {
             const auto message = metadata.getMessage();
-            if (message.isNoteOnOrOff())
-            {
-                std::cout << "MidiTrigger received MIDI note "
-                          << message.getNoteNumber()
-                          << " with velocity " << message.getVelocity()
-                          << std::endl;
-            }
-
             if (message.isNoteOnOrOff() && message.getNoteNumber() == MIDInote)
             {
                 lastTriggered = message.isNoteOn();
