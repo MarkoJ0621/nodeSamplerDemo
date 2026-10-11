@@ -11,7 +11,7 @@ export default defineConfig({
     exclude: ["@xyflow/svelte"],
   },
   build: {
-    outDir: '../../plugin/ui/public',
+    outDir: '../plugin/ui/public',
     emptyOutDir: true,
   },
 });
