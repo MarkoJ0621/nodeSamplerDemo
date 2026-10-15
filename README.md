@@ -12,19 +12,6 @@ NodeSampler is a Max-inspired, node-based audio plugin for flexible sampling. Lo
 
 This plugin is untested on Windows or Linux, however it definetely runs on MacOS
 ## Build
-
-The repository includes a build script that downloads JUCE, installs the UI
-dependencies, builds the web UI, and builds the plugin:
-
-```bash
-./build.sh
-```
-
-The script checks for `git`, CMake 3.22 or newer, Node.js, npm, and a working
-C++20 toolchain. If dependencies are missing, it installs them through
-Homebrew on macOS or `apt` on Debian/Ubuntu Linux. On macOS, install the Xcode
-Command Line Tools if they are not already installed.
-
 Clone the repository and enter its directory:
 
 ```bash
@@ -77,3 +64,8 @@ xattr -dr com.apple.quarantine ~/Library/Audio/Plug-Ins/Components/NodeSampler.c
 ```
 
 Restart the host application after installing or changing a plugin.
+
+# TODO
+
+- add more nodes!
+- reverse flow of MIDI trigger, to allow for multiple MIDI triggers for the same sample with different processing.
